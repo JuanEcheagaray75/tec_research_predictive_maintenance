@@ -1,0 +1,137 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage[letterpaper, top=0.78in, bottom=0.78in, left=0.98in, right=0.98in]{geometry}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{soul}
+\usepackage[document]{ragged2e}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{authblk}
+\usepackage{enumitem}
+\usepackage[font=footnotesize,labelfont=bf]{caption}
+\providecommand{\keywords}[1]{\textbf{\textit{Index terms---}} #1}
+
+\decimalpoint
+\renewcommand{\baselinestretch}{1.5}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\graphicspath{{img/}}
+\setlist[itemize]{noitemsep}
+
+
+\title{\Large \bf Inteligencia artificial aplicada a mantenimiento predictivo: Revisión de Literatura}
+\date{\normalsize 13 de agosto del 2023}
+\author{\normalsize Juan Pablo Echeagaray González}
+\affil{Ing. en Ciencias de Datos y Matemáticas, Tec de Monterrey}
+
+\begin{document}
+
+    \maketitle
+
+    1. \textbf{¿A que se refiere el mantenimiento de un equipo?}
+
+    Conjunto de prácticas realizadas para mantener a un equipo operacional \cite{wikipedia-contributors-2023-Maintenance}.
+
+    2. \textbf{¿Cuáles son los tipos de mantenimiento, incluyendo una pequeña descripción?}
+
+    De forma general se pueden catalogar los tipos de mantenimiento en 3 clases \cite{carvalho2019systematic}:
+    \begin{itemize}
+        \item Correctivo: se realiza cuando una máquina deja de ser funcional, es la forma más simple pero más costosa, pues implica el detenimiento de operaciones
+        \item Preventivo: realizado de forma periódica en ventanas de tiempo.preestablecidas, es una técnica sencilla de implementar más no óptima, pues bien podría ser que el equipo falle antes de la próxima rutina de mantenimiento o que esta misma se realice mucho antes de que el equipo la necesite.
+        \item Predictivo: se realiza mediante el apoyo de los pronósticos generados por un modelo predictivo; supone que se tiene acceso de forma continua a distintos métricos informativos del estado de la máquina en cuestión. Utiliza datos históricos para desarrollar un modelo interno del funcionamiento de la máquina que pueda predecir a un horizonte de tiempo definido la posible falla del mecanismo. Engloba el análisis visual del equipo, la implementación de modelos estadísticos o el uso de modelos de aprendizaje profundo.
+    \end{itemize}
+
+    3. \textbf{Tipos de datos que se utilizan en mantenimiento predictivo. Investiga al menos de 3 tipos de datos e incluye una pequeña descripción de cada uno de ellos y en que equipos es mas frecuente utilizado.}
+
+    Obtenidos de \cite{carvalho2019systematic}, \cite{zhang2019data}
+    \begin{itemize}
+        \item Vibraciones: fenómenos mecánico donde ocurren oscilaciones a partir de un punto de equilibrio \cite{wikipedia-contributors-2023-Vibration}; medidas en extractores de aire, motores, bombas industriales
+        \item Temperatura: cantidad física que expresa de forma cuantitativa la percepción de calor o frío \cite{wikipedia-contributors-2023-Temperature}; medida en motores de aviones, sistemas de refrigeración, bioreactores, discos duros
+        \item Mediciones sonoras: onda elástica que se propaga a través de gases, líquidos y sólidos \cite{BELCHAMBER2005324}; medidas en caja de cambios, herramientas de corte, rodamientos (baleros)
+    \end{itemize}
+
+    4. \textbf{¿Cómo se recolectan los datos?}
+
+    \begin{itemize}
+        \item Vibraciones: sensores piezoelétricos cerámicos, acelerómetros, sondas de proximidad (estas últimas suelen utilizarse en máquinas rotatorias para medir la vibración de un eje) \cite{ni-vibration-measurement}
+        \item Temperatura: \begin{itemize}
+            \item Par termoeléctrico (mide la diferencia en el potencial eléctrico de 2 piezas de metal distintos conectadas entre sí a las que se les aplica calor) \cite{mcgranahan2020inconvenient}
+            \item RTD (Resistencia térmica), resistor térmico cuya resistencia eléctrica varía linealmente (para efectos prácticos) con la temperatura, es relativamente estable y válido para una amplia gama de temperaturas, pero tiene una alta latencia. \cite{kim2001study}
+            \item Termistor, proceso similar al RTD; donde ahora existen PTC y NTC, donde las curvas de cambio en resistencia son positivas y negativas respectivamente, suelen tener un intervalo de medición menor a los RTD \cite{reverter2021tutorial}
+        \end{itemize}
+        \item Mediciones sonoras: micrófonos, micrófonos ultrasónicos \cite{murphy2020choosing}
+    \end{itemize}
+
+    5. \textbf{¿Qué es una serie de tiempo?}
+
+    Un conjunto de observaciones ordenadas en el tiempo, generalmente las observaciones se realizan en intervalos de tiempo uniformes. \cite{peixeiro2022time}
+
+    Nota: Existen casos en los que los valores faltantes en una serie pueden ser imputados de forma sencilla con conocimiento contextual (ej. falta de ventas, cierre de operaciones, etc\dots)
+
+    6. \textbf{¿Qué es un método de predicción y para que se utilizan? Menciona algunos métodos para predicción o pronostico de series de tiempo.}
+
+    Es un modelo matemático que busca predecir las observaciones futuras de una serie de tiempo $x_{n+m}, m = 1, 2, \dots$, utilizando las observaciones recolectadas hasta el presente $x_{1:n} = \{x_i\}_{i=1}^{n}$. \cite{shumway2017time}, \cite{peixeiro2022time}, \cite{carvalho2019systematic}. Algunos usos comunes de los métodos de pronóstico engloban la predicción del consumo energético, la temperatura, índices de anomalías de fenómenos meteorológicos, el valor de una acción, etc\dots
+
+    Algunos de los modelos utilizados para el pronóstico son:
+    \begin{enumerate}
+        \item Modelos estadísticos: Promedios móviles, Exponential Smoothing, ARIMA
+        \item Métodos de Conjunto: Random Forest, XGBoost
+        \item Redes Neuronales Recurrentes: RNN, LSTM, Transformer
+    \end{enumerate}
+
+    7. \textbf{¿Qué es la inteligencia artificial?}
+
+    Una definición sencilla sería el uso de máquinas y computadoras que imiten las capacidades de solución de problemas y toma de decisiones de la mente humana \cite{ibm-ai}.
+
+    Una visión más completa ramifica la posible definición como un agente que \cite{russell2021artificial}:
+    \begin{itemize}
+        \item Actúa de forma humana: similar a la prueba de Turing, donde basta engañar a un ser humano sobre la naturaleza del agente
+        \item Piensa de forma humana: similar a la ciencia cognitiva, donde el interés se encuentra en la similitud del proceso de pensamiento que lleva el agente con lo que haría un ser humano
+        \item Actúa racionalmente: agente que actúa para conseguir el mejor estado, o el mejor estado esperado. (Con todos los problemas que conlleva la definición de mejor)
+        \item Piensa racionalmente: agente que utiliza las reglas del campo de la lógica para afrontar el entorno (en caso de incertidumbre se utilizan probabilidades) al construir un modelo abstracto del mismo. Se vuelve imposible generar un modelo que captura la esencia completa del entorno como para que el agente tenga reglas adaptables al entorno
+    \end{itemize}
+
+    8. \textbf{¿Como se clasifican los algoritmos de inteligencia?}
+
+        Puede ser visto como \cite{team-2023}:
+        \begin{itemize}
+            \item Inteligencia Artificial Débil: toda la inteligencia artificial del presente se encuentra en esta categoría, modelos de visión computacional, procesamiento de lenguaje natural, modelos de pronóstico y clasificación, AI generadora
+            \item Inteligencia Artificial General: sus habilidades de razonamiento y acción se encuentran a la par de las del ser humano
+            \item Super Inteligencia Artificial: sus habilidades de razonamiento y acción superan a las del ser humano
+        \end{itemize}
+
+        Hablando específicamente del subconjunto representado por los algoritmos de Machine Learning, se tiene entonces \cite{delua-2021}:
+        \begin{itemize}
+            \item Supervisado: aprendizaje que requiere de un conjunto de datos con etiquetas, donde estas le permiten al modelo optimizar una función de pérdida conforme aprenda (Requiere de un conjunto de características $x$ para predecir una etiqueta $y$)
+            \item No supervisado: utiliza algoritmos para estudiar la estructura inherente de un conjunto de datos
+            \item Por refuerzo: donde un agente (una función matemática, código, un robot, etc\dots) recibe un estado y una recompensa en función de sus acciones, el agente buscará determinar la mejor política de acción que maximice su función objetivo. \cite{ladosz2022exploration}
+        \end{itemize}
+
+
+    9. \textbf{¿Cuales son las ventajas y desventajas de los algoritmos de inteligencia artificial?}
+
+        Como ventajas:
+        \begin{itemize}
+            \item Automatización de procesos
+            \item Incrementa nuestra capacidad de análisis de datos (abusando de la expresión)
+        \end{itemize}
+
+        Como desventajas:
+        \begin{itemize}
+            \item Dificultad para interpretar los resultados (Explainable AI, black box models)
+            \item Pueden esparcir sesgos presentes en los datos
+            \item No existe una respuesta sencilla a quién es responsable de los resultados de un modelo
+            \item De momento está comenzando a quitar trabajos (cuando prometió solamente ayudar en tareas repetitivas)
+            \item Es difícil establecer de forma precisa el objetivo de un modelo de AI hará exactamente lo que le pidamos, pero tal vez no de la manera en que lo queramos
+            \item Se necesita de una gran cantidad de datos para desarrollar modelos más complejos, corolario a esto, se incremente la necesidad de un mayor poder de cómputo
+        \end{itemize}
+
+    \clearpage
+    \bibliographystyle{IEEEtran}
+    \bibliography{references.bib}
+\end{document}
