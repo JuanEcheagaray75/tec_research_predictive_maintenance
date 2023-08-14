@@ -12,3 +12,10 @@
 *.synctex\(busy\)
 *.nav
 *.snm
+*.bcf
+*.run.xml
+*.synctex
+*.dvi
+
+# Large datasets
+*.h5
