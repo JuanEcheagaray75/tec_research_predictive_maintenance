@@ -19,3 +19,9 @@
 
 # Large datasets
 *.h5
+
+# Papers
+/papers
+
+# Sensor images
+activities/data_exploration/img/sensors_unit_*
