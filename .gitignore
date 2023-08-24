@@ -25,3 +25,9 @@
 
 # Sensor images
 activities/data_exploration/img/sensors_unit_*
+
+# Virtual environments
+.venv
+
+# Python
+*.pyc
