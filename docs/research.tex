@@ -1,0 +1,138 @@
+\documentclass{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{datetime}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\usepackage{hyperref}
+
+\title{Research Stay: Predictive Maintenance of Industrial Equipment \\\vspace*{20pt} \normalsize  \today}
+\author{\IEEEauthorblockN{Juan Pablo Echeagaray González} \\
+\IEEEauthorblockA{\textit{School of Engineering and Sciences} \\
+\textit{Instituto Tecnológico y de Estudios Superiores de Monterrey}\\
+Monterrey, Nuevo León, México \\
+\href{mailto:pabloechg@outlook.com}{pabloechg@outlook.com}
+}}
+
+\begin{document}
+    \maketitle
+
+    \begin{abstract}
+        Random gibberish as of now
+    \end{abstract}
+    \begin{IEEEkeywords}
+        Predictive Maintenance, Deep Learning, Autoencoder, Convolutional Neural Networks, LSTM
+    \end{IEEEkeywords}
+
+    \section{Introduction}
+
+        % What is predictive maintenance? (cite mdpi)
+        % - A preventive maintenance approach that aims at improving the performance and efficiency of a given equipment by increasing its lifespan through accurate predictions of its remaining useful life for the purpose of scheduling maintenance activities
+
+        % On the importance of predictive maintenance (cite mdpi)
+        % - Reduces operational costs
+        % - Increases availability of critical equipment
+        % - Ensures a sustainable and efficient operation
+
+        % Challenges of predictive maintenance (cite mdpi)
+        % - Financial, organizational, data sources or the nature of the equipment to be analyzed
+
+        % Taxonomy of predictive maintenance (cite chao thesis)
+        % - Data-driven models: usage of monitoring data to train a model that captures the relationship between the components of the system and its degradation process
+        % - Physics-based models: deriving first-principles models that capture the relationships between the components of the system and its degradation process, based upon a set of Engineering equations
+        % - Hybrid models: combination of data-driven and physics-based models, piping features derived from physical knowledge into a data-driven model for example
+
+        % On the use of data-driven models (cite chao thesis, olga fink paper)
+        % - Orders of magnitude simpler to implement than physics-based models
+        % - Do not require (mostly) experts in the field for their development
+        % - Generally easier to use in an industrial environment given the complexity of the representation of the physical phenomenon (something similar to the variance-bias tradeoff that ML models suffer, it may well be that a simple physics model is easier to compute than a neural network) INFERENCE TIME AND COST
+
+        % Problems with the use of neural networks (olga fink paper)
+        % - The high degree of difficulty of interpretation of the models
+
+        Predictive Maintenance (PdM) has emerged as a pivotal strategy aimed at enhancing the performance, efficiency, and lifespan of equipment through the provision of accurate insights into their remaining useful life. By scheduling maintenance activities based on these predictions, organizations can optimize operations, reduce costs, and ensure the sustained functionality of critical assets. The significance of PdM lies not only in its potential to curtail operational expenditures but also in its capacity to bolster the availability of essential machinery, promoting sustainable and efficient operations \cite{Achouch2022}.
+
+        In the realm of PdM, the development of accurate models for estimating the remaining useful life of equipment poses both opportunities and challenges. The drive to maximize the operational lifespan of equipment is counterbalanced by the intricate hurdles associated with the construction of predictive models. These challenges manifest in various forms, including financial constraints, organizational intricacies, data sourcing complexities, and the inherent characteristics of the equipment under consideration \cite{Achouch2022} \cite{Fink2020}.
+
+        In an attempt to navigate these challenges, a taxonomy of predictive maintenance has emerged, categorizing approaches into three main paradigms: data-driven models, physics-based models, and hybrid models. Data-driven models harness monitoring data to establish relationships between system components and their degradation patterns. Physics-based models, on the other hand, derive from first-principles, capturing the inherent dynamics through engineering equations. Hybrid models amalgamate these two paradigms, fusing physical insights into data-driven frameworks \cite{chao-thesis}.
+
+        The use of data-driven models has gained prominence due to their practical advantages, as highlighted by Chao et al. and corroborated by Olga Fink's research \cite{chao-thesis} \cite{Fink2020}. These models offer a compelling trade-off, delivering relative simplicity in implementation and reduced reliance on domain experts during development. Particularly within industrial settings, where complex physical phenomena may defy intuitive representation, data-driven models can provide a practical solution akin to the variance-bias tradeoff observed in machine learning models.
+
+        Nevertheless, the application of data-driven models, specifically neural networks, is not without challenges, as indicated by Olga Fink's work \cite{Fink2020}. Interpretability remains a notable concern due to the inherent opacity of neural network architectures \cite{Rojat2021}. Moreover, the effectiveness of these models hinges on large, labeled datasets, which can be demanding to curate.
+
+        In light of these considerations, this study delves into the development of a predictive maintenance framework that not only tackles the challenges of estimating remaining useful life but also leverages data-driven models to achieve operational efficiency and sustainability. By combining the advantages of data-driven approaches with the insights of domain knowledge, this research endeavors to bridge the gap between accuracy and interpretability, contributing to the advancement of predictive maintenance strategies.
+
+    \section{Problem Statement}
+
+        % What I want to do?
+        Predictive maintenance confronts a twofold challenge. Firstly, the quest for a versatile and efficient model capable of estimating the remaining useful life of diverse industrial equipment persists. Existing solutions often lack the flexibility required to cater to a wide spectrum of machinery, hindering the seamless application of predictive maintenance strategies.
+
+        Secondly, the increasing complexity of predictive models complicates their practical implementation. As model outputs grow intricate, grasping their predictions and the associated confidence levels becomes convoluted, obstructing informed decision-making. This research aims to establish a unified predictive maintenance framework, transcending machinery diversity and offering user-friendly tools for decoding prediction outcomes and their underlying reliability metrics. By addressing these challenges, the study seeks to facilitate the integration of predictive maintenance practices that are efficient, interpretable, and adaptable.
+
+        The landscape of predictive maintenance research has seen notable developments encompassing a variety of modeling approaches for estimating Remaining Useful Life (RUL). Initial endeavors have leveraged basic Long Short-Term Memory (LSTM) architectures to predict RUL, as highlighted by \cite{lstm-stat-features}. Additionally, convolutional neural networks (CNNs) have gained traction, with studies demonstrating the efficacy of CNNs in RUL prediction \cite{phm2021-2nd-inception}, \cite{phm2021-3rd-stacked-cnn} \cite{phm2021-1st-cnn}. Hybrid models, such as LSTM combined with convolutional layers, have also demonstrated promise \cite{zhao2020double} \cite{peng2021remaining}. Furthermore, autoencoders integrated with convolutional neural networks have been explored in the context of RUL prediction \cite{rul-saetcn}.
+
+        To enhance model performance, a variety of hyperparameter optimization techniques have been employed. These techniques encompass empirical trials, Bayesian optimization \cite{phm2021-1st-cnn}, grid search, and random search. These strategies aim to iteratively fine-tune model parameters to achieve optimal predictive accuracy.
+
+        Regarding model interpretability and confidence intervals, the literature reveals a diversity of approaches, albeit with certain gaps. Although methods for interpreting convolutional neural networks (CNNs) and recurrent neural networks (RNNs) have been proposed \cite{Rojat2021}, few directly address RUL predictions. Notably, there exists a lack of approaches tailored for mixed models that combine both CNNs and RNNs. Moreover, model-agnostic techniques like LIME or SHAP, though promising, require modifications to effectively identify salient subsequences for RUL predictions.
+
+        In light of these observations, this research endeavors to bridge the existing gaps by proposing a comprehensive framework that amalgamates both CNNs and RNNs, facilitating efficient RUL predictions while addressing challenges related to model interpretability and confidence interval estimation. The study aims to contribute to the refinement of predictive maintenance strategies by offering a unified approach that aligns predictive accuracy with actionable insights.
+
+    \section{Objectives}
+
+        The primary objective of this research is to establish a comprehensive predictive maintenance framework that effectively processes sensory data obtained from a designated fleet of machinery. The framework's main purpose is to derive actionable insights from the data, facilitating accurate predictions regarding the remaining useful life of the equipment under consideration.
+
+        Specifically, the framework aims to achieve the following key characteristics (derived from the work from \cite{Rojat2021}) within the predictive model it supports:
+
+        \begin{itemize}
+            \item \textbf{Stability}: One of the central objectives is to ensure the stability of the developed predictive model. This involves subjecting the model to noise-infused input data to evaluate its resilience and ability to generate reliable predictions under varied data conditions.
+            \item \textbf{Robustness}: The framework seeks to validate the robustness of the predictive model by introducing outliers to the input data. This assessment aims to determine the model's capacity to maintain its predictive accuracy despite the presence of anomalous data points.
+            \item \textbf{Reproducibility}: A critical goal of this research is to establish the reproducibility of the predictive model. This will involve conducting multiple experiments with identical conditions to ascertain the model's consistent performance and its ability to generate reliable predictions across various trials.
+            \item \textbf{Confidence}: The framework endeavors to equip the predictive model with the capability to furnish confidence intervals for its predictions. This feature aims to quantify the uncertainty associated with the predictions, providing stakeholders with a comprehensive understanding of the model's reliability.
+        \end{itemize}
+
+        Furthermore, the framework aims to achieve a certain degree of interpretability in the predictive model's outcomes. While the complexity of the relationships between the sensors utilized on industrial system presents challenges, the research acknowledges the significance of establishing avenues for interpreting the model's predictions, despite potential hurdles arising from the intricate sensor interplay.
+
+    \section{Hypothesis}
+
+        This study posits that by utilizing a collection of pertinent \footnote{Expertise in choosing optimal machine performance indicators remains crucial despite the advanced predictive framework, ensuring accurate predictions and effective decision-making.} raw health measures of machinery, commonly referred to as sensor readings, in conjunction with relevant environmental descriptors, it is feasible to construct an integrated predictive model. This model is anticipated to adeptly discern the underlying interdependencies inherent within the dataset. Consequently, the resultant composed model is expected to demonstrate the capacity to accurately forecast the remaining useful life of the equipment, all while maintaining a high level of computational efficiency.
+
+        \footnote{Note: Another strong hypothesis to later add is that the prediction of the RUL of a machine can be predicted with just the information from the current cycle}
+
+    \section{Methodology}
+
+        The methodology employed in this research comprises a multi-faceted approach designed to enable the development of an effective predictive maintenance framework. The key stages of the methodology are outlined as follows:
+        \begin{enumerate}
+            \item \textbf{Data Processing}: Raw data undergoes essential preprocessing, including data type transformation and downsampling (decimation) to facilitate manageable computational loads.
+            \item \textbf{Regression Model for Sensor Patterns}: A regression model is constructed to capture internal sensor behaviors under healthy machine conditions. This model leverages scenario descriptors and auxiliary data such as cycle number and machine class. Its goal is to define reference patterns for each sensor's behavior during optimal machine operation.
+            \item \textbf{Autoencoder for Data Compression}: An autoencoder architecture is developed to compress the normalized data into a concise representation. This step reduces data dimensionality while retaining crucial information.
+            \item \textbf{Base Regression Model with Complex Architecture}: A foundational regression model is established, incorporating a blend of convolutional 1D (conv1d) and Long Short-Term Memory (LSTM) layers, potentially within an inception module. Simplicity is prioritized initially, with complexity added iteratively. Hyperparameter optimization is conducted to fine-tune the model's performance, encompassing architecture configuration and other essential parameters.
+            \item \textbf{Confidence Intervals for Model Scores}: Methodology is employed to ascertain confidence intervals for the model's average scores, enhancing the interpretability of the model's performance.
+            \item \textbf{Confidence Intervals for Remaining Useful Life}: Strategies are investigated to establish confidence intervals for the predictions of the remaining useful life of the machine. This area warrants further exploration to achieve accurate and reliable estimation intervals. \footnote{Read about bootstrapping, but I have never implemented it}
+        \end{enumerate}
+
+        Throughout the methodology, a phased and systematic approach is maintained, starting from data preprocessing and progressing through the development of increasingly sophisticated models. The interplay between data-driven techniques and complex model architecture optimization serves as a foundation for generating dependable predictions of equipment health and longevity.
+
+    \section{Scope}
+
+        This research is delimited to an investigation involving a homogenous fleet of machines, all possessing uniform operational attributes. Throughout the operational cycles of these machines, sensor readings are collected at various intervals, ensuring a comprehensive dataset for analysis.
+
+        The study is grounded in the use of a labeled dataset that provides explicit information on instances of machine malfunctions, along with data records until a machine reaches its point of cessation. This labeled data forms the basis for developing predictive models.
+
+        It is important to note that the research intentionally avoids delving into the task of imputing missing data points, maintaining its focus on working exclusively with complete data entries. This selective approach enables the exploration of predictive model efficacy under well-defined conditions, while excluding the complexities introduced by missing data imputation.
+
+    \section{Contributions}
+
+        % A ready to use python library for predictive maintenance with easy to use functions for data preprocessing, model training, model evaluation and model interpretation
+        % Think of how the overall class will look like
+        This research introduces a novel Python library tailored for predictive maintenance, encompassing functions that facilitate data preprocessing, model training, evaluation, and interpretation. The library's unified toolkit streamlines the predictive maintenance workflow, empowering practitioners with efficient tools to expedite implementation and enhance operational efficiency.
+
+        The central contribution of this study lies in the development of a comprehensive Python library for predictive maintenance. By providing accessible functions spanning data preprocessing, model training, evaluation, and interpretation, the library offers a cohesive solution that simplifies the predictive maintenance process. This toolkit not only streamlines the workflow but also empowers practitioners with the essential tools needed to confidently employ predictive maintenance strategies and make informed decisions based on accurate insights.
+
+    \bibliographystyle{IEEEtran}
+    \bibliography{references.bib}
+\end{document}
