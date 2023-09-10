@@ -19,15 +19,21 @@
 
 # Large datasets
 *.h5
+*.parquet
 
 # Papers
 /papers
 
 # Sensor images
 activities/data_exploration/img/sensors_unit_*
+pdm/img/2023*
 
 # Virtual environments
 .venv
 
 # Python
 *.pyc
+
+# Model Logs
+/pdm/model/logs_normalizer
+/pdm/model/normalizer
