@@ -4,7 +4,15 @@
 \usepackage[style=ieee,backend=biber]{biblatex}
 \usepackage{graphicx}
 \usepackage[font=scriptsize,labelfont=bf]{caption}
+\usepackage{pgfpages}
+\usepackage{amsmath}
 \addbibresource{references.bib}
+
+%\setbeameroption{hide notes} % Only slides
+%\setbeameroption{show only notes} % Only notes
+\setbeameroption{show notes on second screen=right} % Both
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 
 \graphicspath{{img/}}
 
@@ -232,90 +240,193 @@
 
     \section{Methodology}
 
-        \begin{frame}{Methodology}{Proposed Methodology}
-            In general the framework can be broken down to:
+        \begin{frame}{Time Series Segmentation}
+
+            \begin{alertblock}{Problem}
+                Dataset consists of a set of multivariate time series of varying length with a distinct number of events per series
+            \end{alertblock}
             \begin{figure}[!htbp]
                 \centering
-                \includegraphics[scale=0.45]{pdm-ml-process.png}
-                \caption{Proposed Methodology}
+                \includegraphics[scale=0.3]{operating_conditions_unit_1_cycle_1.png}
+                \caption{Operating conditions of Plane 1 during its first flight}
             \end{figure}
+
+            \note[item]{Altitude almost always seems to have 3 states, ascent, plateau, descent}
+            \note[item]{Mechanical operations vary throughout the flight, there's no smooth increase or decrease, rather multiple operating stages}
+            \note[item]{Take advantage of the syncrhonization between time series, look at plateau}
         \end{frame}
 
-        \subsection{Normalizer}
-
-            \begin{frame}
-                \frametitle{Normalizer}
-                RUL prediction is usually based on sensor readings of each operating cycle, but:
-                \begin{itemize}
-                    \item Sensor readings encoding degradation can be obfuscated by environmental conditions.
-                    \item No easy way to analyze a machine's degradation without a detailed analysis
-                \end{itemize}
-                \begin{block}{Proposition}
-                    Design a normalizer function to model a machine's degradation based upon environmental descriptors and analyzed in sensor readings
-                \end{block}
-            \end{frame}
-
-            \begin{frame}
-                \frametitle{Degradation Model Proposition}
-                Given a vector $E_t$ of $m$ environmental descriptors and a vector $S_t$ of $n$ sensor reading variables for each timestamp $t$, a function $f$ is proposed as follows:
-                \begin{equation}
-                    f: \mathbb{R}^m \rightarrow \mathbb{R}^n
-                \end{equation}
-
-                The function $f$ is then an internal model of how $S_t$ \textbf{should} look like if the machine were healthy.
-
-                The normalized measures for each timestamp will be:
-                \begin{equation}
-                    \hat{S}_t = S_t - f(E_t)
-                \end{equation}
-            \end{frame}
-
-            \begin{frame}
-                \frametitle{Degradation Model Learning}
-                Prepare a subset of data where the machine is known to operate in optimal conditions and use a neural network to learn the mapping $f$, the baseline architecture is then a DNN:
-                \begin{figure}[!htbp]
-                    \centering
-                    \includegraphics[scale=0.45]{descriptor_predictor_diagram.pdf}
-                    \caption{Baseline sequential model for the degradation function}
-                \end{figure}
-            \end{frame}
-
-    \section{Experimental Results}
-
-        \begin{frame}{Normalizer}{Model Parameters}
+        \begin{frame}{Pros \& Cons}
+            \begin{columns}
+                \begin{column}{0.45\textwidth}
+                    \begin{exampleblock}{Pros}
+                        \begin{itemize}
+                            \item Large data reduction ~\textbf{50x}
+                            \item Lower computational load
+                            \item Ease feature interpretation
+                            \item Reproducible
+                        \end{itemize}
+                    \end{exampleblock}
+                \end{column}
+                \begin{column}{0.45\textwidth}
+                    \begin{alertblock}{Cons}
+                        \begin{itemize}
+                            \item Mixed or uniform MVT segmentation?
+                            \item Not a fixed number of stages in each flight
+                            \item Which descriptors to use?
+                        \end{itemize}
+                    \end{alertblock}
+                \end{column}
+            \end{columns}
             \begin{itemize}
-                \item Test Dataset: NCMAPSS DS01, all FC, only failures in Low Pressure Turbine
-                \item Input: Environmental descriptors, operating cycle, flight class, and time (scaled between 0 and 1)
-                \item Output: Sensor readings
-                \item 5 dense layers of 32 neurons each with a L2 kernel regularizer ($\lambda = 0.005$)
-                \item Adamax for faster and more stable convergence rates
-                \item Training for maximum number epochs of a 100 epochs with early stopping of 5\% of the maximum epochs if there's no improvement in validation loss
+                \item The negatives can be countered by optimizing a model conditioned on the segmentation parameters
             \end{itemize}
         \end{frame}
 
-        \begin{frame}{Normalizer}{Training Overview}
+        \begin{frame}{Time Series Segmentation Basics}
+
+            For a given signal $Y = \{\boldsymbol{y}_t\}_{t=1}^{t=T}$ of $T$ samples, where $y_t \in \mathbb{R}^d$, we assume there exists a set $\mathcal{T} = \{t_{1}^{*}, t_{2}^{*}, \dots, t_{n}^{*}\}$ coding the $n-1$ stages of $Y$
+
             \begin{figure}[!htbp]
                 \centering
-                \includegraphics[scale=0.45]{train_val_loss_show.png}
-                \caption{Training and Validation Loss for proposed model}
+                \includegraphics[scale=0.4]{show_series.png}
+                \caption{Piecewise constant signal with normal noise}
+                \footnote{The last index eases the software implementation}
+            \end{figure}
+
+        \end{frame}
+
+        \begin{frame}{Search Algorithms: Binary Segmentation}
+            Greedy sequential algorithm that estimates 1st change-point as:
+            \begin{equation}
+                \hat{t}_{1} := \argmin_{1 \leq t < T - 1} C(y_{0 \dots t}) + C(y_{t \dots T})
+            \end{equation}
+
+            It then repeats the operation on both left and right segments until the specified number of splits is achieved.
+
+            \begin{figure}[!htbp]
+                \centering
+                \includegraphics[scale=0.3]{bin_seg_schematics.png}
+                \caption{Overview of Binary Segmentation retrieved from \cite{truong2020selective}}
+            \end{figure}
+
+        \end{frame}
+
+        \begin{frame}{Cost Function: L1 Norm}
+            A robust estimator of shifts in the central point of a distribution. Given a series $\{y_t\}_{t \in \mathcal{I}}$ where  $y_t \in \mathbb{R}^d$:
+            \begin{equation}
+                C(y_{\mathcal{I}}) = \sum_{d} \sum_{t \in \mathcal{I}} ||y_t - \bar{y} ||_1
+            \end{equation}
+
+            where $\bar{y}$ is the component wise median of $y_{\mathcal{I}}$
+
+            \begin{itemize}
+                \item Needs scaling, considering not to penalize on segment length
+            \end{itemize}
+
+        \end{frame}
+
+        % \begin{frame}{Methodology}{Proposed Methodology}
+        %     In general the framework can be broken down to:
+        %     \begin{figure}[!htbp]
+        %         \centering
+        %         \includegraphics[scale=0.45]{pdm-ml-process.png}
+        %         \caption{Proposed Methodology}
+        %     \end{figure}
+        % \end{frame}
+
+        % \subsection{Normalizer}
+
+        %     \begin{frame}
+        %         \frametitle{Normalizer}
+        %         RUL prediction is usually based on sensor readings of each operating cycle, but:
+        %         \begin{itemize}
+        %             \item Sensor readings encoding degradation can be obfuscated by environmental conditions.
+        %             \item No easy way to analyze a machine's degradation without a detailed analysis
+        %         \end{itemize}
+        %         \begin{block}{Proposition}
+        %             Design a normalizer function to model a machine's degradation based upon environmental descriptors and analyzed in sensor readings
+        %         \end{block}
+        %     \end{frame}
+
+        %     \begin{frame}
+        %         \frametitle{Degradation Model Proposition}
+        %         Given a vector $E_t$ of $m$ environmental descriptors and a vector $S_t$ of $n$ sensor reading variables for each timestamp $t$, a function $f$ is proposed as follows:
+        %         \begin{equation}
+        %             f: \mathbb{R}^m \rightarrow \mathbb{R}^n
+        %         \end{equation}
+
+        %         The function $f$ is then an internal model of how $S_t$ \textbf{should} look like if the machine were healthy.
+
+        %         The normalized measures for each timestamp will be:
+        %         \begin{equation}
+        %             \hat{S}_t = S_t - f(E_t)
+        %         \end{equation}
+        %     \end{frame}
+
+        %     \begin{frame}
+        %         \frametitle{Degradation Model Learning}
+        %         Prepare a subset of data where the machine is known to operate in optimal conditions and use a neural network to learn the mapping $f$, the baseline architecture is then a DNN:
+        %         \begin{figure}[!htbp]
+        %             \centering
+        %             \includegraphics[scale=0.45]{descriptor_predictor_diagram.pdf}
+        %             \caption{Baseline sequential model for the degradation function}
+        %         \end{figure}
+        %     \end{frame}
+
+    \section{Experimental Results}
+
+        \begin{frame}{Segmentation of Environmental Descriptors}
+            For a test case we apply Binary Segmentation with L1 norm and min. size for segment of 20\% the length of the array
+            \begin{figure}
+                \centering
+                \includegraphics[scale=0.35]{environment_split_1_1.png}
+                \caption{Environmental descriptors (scaled) for the first flight for plane 1}
             \end{figure}
         \end{frame}
 
-        \begin{frame}{Normalizer}{Sample Predictions}
-            \begin{figure}[!htbp]
+        \begin{frame}{Segmentation of Environmental Descriptors}
+            \begin{figure}
                 \centering
-                \includegraphics[scale=0.27]{Nc_cycle_2_pred_op_conditions.png}
-                \caption{Comparison of Physical Core Speed predictions and real values}
+                \includegraphics[scale=0.35]{environment_split_1_20.png}
+                \caption{Environmental descriptors (scaled) for the 20th flight for plane 1}
             \end{figure}
         \end{frame}
 
-        \begin{frame}{Normalizer}{Sample Predictions}
-            \begin{figure}[!htbp]
-                \centering
-                \includegraphics[scale=0.27]{P50_cycle_22_pred_op_conditions.png}
-                \caption{Comparison of Total Pressure at Low Pressure Turbine outlet predictions and real values}
-            \end{figure}
-        \end{frame}
+        % \begin{frame}{Normalizer}{Model Parameters}
+        %     \begin{itemize}
+        %         \item Test Dataset: NCMAPSS DS01, all FC, only failures in Low Pressure Turbine
+        %         \item Input: Environmental descriptors, operating cycle, flight class, and time (scaled between 0 and 1)
+        %         \item Output: Sensor readings
+        %         \item 5 dense layers of 32 neurons each with a L2 kernel regularizer ($\lambda = 0.005$)
+        %         \item Adamax for faster and more stable convergence rates
+        %         \item Training for maximum number epochs of a 100 epochs with early stopping of 5\% of the maximum epochs if there's no improvement in validation loss
+        %     \end{itemize}
+        % \end{frame}
+
+        % \begin{frame}{Normalizer}{Training Overview}
+        %     \begin{figure}[!htbp]
+        %         \centering
+        %         \includegraphics[scale=0.45]{train_val_loss_show.png}
+        %         \caption{Training and Validation Loss for proposed model}
+        %     \end{figure}
+        % \end{frame}
+
+        % \begin{frame}{Normalizer}{Sample Predictions}
+        %     \begin{figure}[!htbp]
+        %         \centering
+        %         \includegraphics[scale=0.27]{Nc_cycle_2_pred_op_conditions.png}
+        %         \caption{Comparison of Physical Core Speed predictions and real values}
+        %     \end{figure}
+        % \end{frame}
+
+        % \begin{frame}{Normalizer}{Sample Predictions}
+        %     \begin{figure}[!htbp]
+        %         \centering
+        %         \includegraphics[scale=0.27]{P50_cycle_22_pred_op_conditions.png}
+        %         \caption{Comparison of Total Pressure at Low Pressure Turbine outlet predictions and real values}
+        %     \end{figure}
+        % \end{frame}
 
     \section{Conclusions}
 
@@ -323,6 +434,11 @@
         \begin{frame}
             \frametitle{References}
             \printbibliography
+        \end{frame}
+
+
+    \begin{frame}
+        False frame
     \end{frame}
 
 \end{document}
