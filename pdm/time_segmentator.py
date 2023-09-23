@@ -11,7 +11,7 @@ class TimeSegmentProcessor():
                  min_size: int,
                  jump: int,
                  n_bks: int,
-                 stat_funcs: list[callable]):
+                 stat_funcs: list):
         """Multivariate time series changepoint detection wrapper
 
         Parameters
@@ -38,7 +38,6 @@ class TimeSegmentProcessor():
         self.n_bks = n_bks
         self.stat_funcs = stat_funcs
 
-
     def calculate_change_points(self, array: np.ndarray):
         """Detect changepoints in a given ndarray
 
@@ -62,11 +61,7 @@ class TimeSegmentProcessor():
         self.bks_idx = self.algo.predict(self.n_bks)
 
         if len(self.bks_idx) != self.n_bks + 1:
-            # false_split = (self.bks[-1] + self.bks[-2]) // 2
-            # self.bks.insert(len(self.bks) - 1, false_split)
-
             raise ValueError(f"Algo couldn't find {self.n_bks} changepoints in the array")
-
 
     def split_array(self, array: np.ndarray) -> list[np.ndarray]:
         """Helper function to get a list of the splitted arrays
@@ -102,7 +97,6 @@ class TimeSegmentProcessor():
 
         return sub_arrays
 
-
     def segment_stats(self, segment: np.ndarray) -> np.ndarray:
         """Helper function to calculate statistical properties of a segment
 
@@ -116,19 +110,10 @@ class TimeSegmentProcessor():
         np.ndarray
             Flattened array of stats properties of the segment
         """
-
-        if len(segment.shape) == 1:
-            axis = None
-        elif len(segment.shape) == 2:
-            axis = 0
-
-        stats = [f(segment, axis=axis) for f in self.stat_funcs]
-
-        if axis is None:
-            return stats
-        elif axis == 0:
-            return np.concatenate(stats)
-
+        stats = [f[0](segment, **f[2]) for f in self.stat_funcs]
+        # Calculates resulting statistics "f" for each variable
+        # Each row represents different variables
+        return np.vstack(stats).T.flatten()
 
     def process_segments(self, array: np.ndarray) -> np.ndarray:
         """Wrapper function to calculate changepoints and provide the final stats of the arrays
