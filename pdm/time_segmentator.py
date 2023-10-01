@@ -61,7 +61,9 @@ class TimeSegmentProcessor():
         self.bks_idx = self.algo.predict(self.n_bks)
 
         if len(self.bks_idx) != self.n_bks + 1:
-            raise ValueError(f"Algo couldn't find {self.n_bks} changepoints in the array")
+            raise ValueError(
+                f"Algo couldn't find {self.n_bks} changepoints in the array"
+                )
 
     def split_array(self, array: np.ndarray) -> list[np.ndarray]:
         """Helper function to get a list of the splitted arrays
@@ -116,7 +118,8 @@ class TimeSegmentProcessor():
         return np.vstack(stats).T.flatten()
 
     def process_segments(self, array: np.ndarray) -> np.ndarray:
-        """Wrapper function to calculate changepoints and provide the final stats of the arrays
+        """Wrapper function to calculate change-points and provide
+        the final stats of the arrays
 
         Parameters
         ----------
