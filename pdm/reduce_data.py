@@ -1,15 +1,18 @@
+"""Resample and downcast NCMAPSS dataset.
+
+Script which reads a raw PHMAP2021 data directory and
+applies downcasting to numeric data types while resampling
+to every nth observation
+"""
 import pathlib
 from ncmapss import NcmapssLoader
 
-"""
-Script to preprocess and save all the training datasets into a processed
-directory with a given decimation factor, a more memory friendly data type
-and in a parquet format to keep all the data types
-"""
-
 
 def main():
+    """Read raw dir and downcast/resample.
 
+    Avoid 'N-CMAPSS_DS08d-010.h5' as its corrupted
+    """
     print('Creating datasets...')
     DATA_DIR = pathlib.Path.cwd().parent / 'data'
 
@@ -24,8 +27,12 @@ def main():
     DECIMATION = 5
 
     # Process all training files except Validation
-    # Ignored DS08 since it's corrupt
-    files = [x for x in RAW_DATA_DIR.iterdir() if x.is_file() and 'Validation' not in x.name]
+    # Ignored DS08 since it's corrupted
+    files = []
+    for f in RAW_DATA_DIR.iterdir():
+        if f.is_file() and 'Validation' not in f.name:
+            files.append(f)
+
     files.remove(RAW_DATA_DIR / 'N-CMAPSS_DS08d-010.h5')
 
     for file in files:
