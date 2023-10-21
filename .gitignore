@@ -40,6 +40,7 @@ activities/data_exploration/img/sensors_unit_*
 /pdm/model/normalizer
 /pdm/catboost_info
 /pdm/model/xgb
+/pdm/model/trained
 
 # Predictions
 /pdm/img/xgb/*.png
