@@ -1,3 +1,11 @@
+"""Class to load PHMAP 2021 files.
+
+The original PHMAP2021 data challenge competition files
+are to big for a personal computer to analyze at the same time
+I've selected more efficient data types float(64 -> 32), resampled
+to every nth reading and using parquet files to maintain specified
+data types
+"""
 import numpy as np
 import pandas as pd
 import h5py
@@ -5,10 +13,13 @@ import pathlib
 
 
 class NcmapssLoader:
+    """Class to load PHMAP 2021 h5 files resampled and downcasted."""
 
-
-    def __init__(self, data_dir: pathlib.Path, file: str, decimation: int = 10):
-        """NCMAPSS data loader initializer
+    def __init__(self,
+                 data_dir: pathlib.Path,
+                 file: str,
+                 decimation: int = 10):
+        """NCMAPSS data loader initializer.
 
         Parameters
         ----------
@@ -25,9 +36,8 @@ class NcmapssLoader:
         self.file_path = data_dir / file
         self.df = None
 
-
     def decimate_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Return a resampled version of a dataframe
+        """Return a resampled version of a dataframe.
 
         Parameters
         ----------
@@ -48,9 +58,8 @@ class NcmapssLoader:
 
         return pd.concat(filtered_rows)
 
-
     def load_file(self, measure_interest: str) -> pd.DataFrame:
-        """Helper function to load a specific dataset from h5 file
+        """Load a specific dataset from h5 file.
 
         Parameters
         ----------
@@ -65,11 +74,12 @@ class NcmapssLoader:
         Raises
         ------
         ValueError
-            In case the provided measure is not part of the available measurements
+            In case the provided measure is not part of
+            the available measurements
         """
-
         if measure_interest not in self.available_measurements:
-            raise ValueError(f"measure_interest must be one of {self.available_measurements}")
+            raise ValueError(
+                f"measure_interest must be in {self.available_measurements}")
 
         train = f'{measure_interest}_dev'
         test = f'{measure_interest}_test'
@@ -96,12 +106,12 @@ class NcmapssLoader:
 
         return data
 
-
     def create_dataset(self):
-        """Helper function to set the dataset using available measurements
-        Manually specified since some measurements are meant to be hidden
-        """
+        """Set the dataset using available measurements.
 
+        Manually specified since some measurements are meant to be hidden
+        (ie virtual sensors)
+        """
         W = self.load_file('W')
         X_s = self.load_file('X_s')
         A = self.load_file('A')
@@ -109,16 +119,16 @@ class NcmapssLoader:
         df = pd.concat([W, X_s, A, Y], axis=1)
         self.df = self.decimate_dataframe(df)
 
-
     def save_dataset(self):
-        """Helper function to save a created dataset
-        into a processed directory in parquet format
+        """Save a created dataset.
+
+        Saves into a processed directory in parquet format
         (Maintains specified data types)
         """
-
         processed_dir = self.data_dir.parent / 'processed'
         processed_dir.mkdir(exist_ok=True)
+        factor = self.decimation
 
-        file_name = f'{self.file_path.stem}_decimated_{self.decimation}.parquet'
+        file_name = f'{self.file_path.stem}_decimated_{factor}.parquet'
         file_path = processed_dir / file_name
         self.df.to_parquet(file_path)

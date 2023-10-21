@@ -26,7 +26,8 @@
 
 # Sensor images
 activities/data_exploration/img/sensors_unit_*
-pdm/img/2023*
+/pdm/img/2023*
+/pdm/img/model_predictions
 
 # Virtual environments
 .venv
@@ -37,3 +38,9 @@ pdm/img/2023*
 # Model Logs
 /pdm/model/logs_normalizer
 /pdm/model/normalizer
+/pdm/catboost_info
+/pdm/model/xgb
+/pdm/model/trained
+
+# Predictions
+/pdm/img/xgb/*.png

@@ -1,3 +1,10 @@
+"""Read and process processed PHMAP dataset.
+
+The already downcasted and resampled PHMAP dataset is still quite big
+for any ML algorithm to learn on (on a local machine); hence I propose to
+use MTS segmentation and statistical descriptors to get important statistical
+properties of relevant segments in each flight.
+"""
 import pathlib
 from typing import Tuple, List
 import numpy as np
@@ -8,16 +15,17 @@ from time_segmentator import TimeSegmentProcessor
 
 
 class DataLoader():
+    """Load PHMAP processed dataset and apply statistical descriptors."""
 
     def __init__(self,
                  processed_data_dir: pathlib.Path,
-                 predictor_names: list[str],
-                 extra_names: list[str],
+                 predictor_names: List[str],
+                 extra_names: List[str],
                  stat_funcs: List[Tuple[callable, str, dict]],
                  min_size: float = 0.1,
                  jump: float = 0.05,
                  n_splits: int = 2):
-        """PHMAP2021 Data Loader Init
+        """PHMAP2021 Data Loader Init.
 
         Parameters
         ----------
@@ -38,7 +46,6 @@ class DataLoader():
         n_splits : int, optional
             Number of breakpoints to find in array, by default 2
         """
-
         self.processed_data_dir = processed_data_dir
         self.predictor_names = predictor_names
         self.extra_names = extra_names
@@ -48,7 +55,7 @@ class DataLoader():
         self.n_splits = n_splits
 
     def get_data(self) -> Tuple[pd.DataFrame, pd.Series]:
-        """Returns statistical descriptor matrix and RULS
+        """Return statistical descriptor matrix and RULS.
 
         Returns
         -------
@@ -61,7 +68,6 @@ class DataLoader():
             In case the specified segmentation algorithm doesn't
             find the specified number of break points
         """
-
         results = []
         ruls = []
         unit_names = []

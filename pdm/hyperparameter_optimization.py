@@ -1,186 +1,180 @@
+"""XGBoost hyperparameter optimization.
+
+Run TPE to find a better configuration of hyperparameters
+for the proposed XGBoost models:
+- RUL estimator
+- Lower / Upper Bound (Prediction Intervals)
+- Median (used for testing and development, not part of the research)
+
+Runs TPE and saves trials and results as pickle files
+"""
 import pathlib
 import pickle
-from timeit import default_timer as timer
 from datetime import datetime
+from typing import Tuple
 import pandas as pd
 import numpy as np
-import lightgbm as lgb
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
+import xgboost as xgb
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import PCA
 from hyperopt import STATUS_OK, Trials, fmin, hp, tpe, space_eval
-
+from loss import PHMAP
 # Important Paths
 start_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-MODEL_PATH = pathlib.Path.cwd() / 'model' / 'lgbm' / start_time
-MODEL_PATH.mkdir(exist_ok=True)
+BASE_MODEL_PATH = pathlib.Path.cwd() / 'model' / 'xgb' / start_time
+BASE_MODEL_PATH.mkdir(exist_ok=True)
 
 
-# RUL Losses
-def phmap_loss(y_true, y_pred):
+def preprocess(dtrain: xgb.DMatrix,
+               dtest: xgb.DMatrix,
+               param: str) -> Tuple[xgb.DMatrix, xgb.DMatrix, str]:
+    """Preprocess step for CV using PCA.
 
-    rmse = mean_squared_error(y_true, y_pred, squared=False)
-    diff = y_true - y_pred
-    alpha = np.where(diff <= 0, -1/10, 1/13)
-    nasa = np.mean(np.exp(alpha * diff) - 1)
+    Parameters
+    ----------
+    dtrain : xgb.DMatrix
+        Training data and labels
+    dtest : xgb.DMatrix
+        Test data and labels
+    param : str
+        Extra param
 
-    return 0.5*(rmse + nasa)
+    Returns
+    -------
+    Tuple[xgb.DMatrix, xgb.DMatrix, str]
+        Training and testing data, and another parameter
+    """
+    train_data = np.asarray(dtrain.get_data().todense())
+    test_data = np.asarray(dtest.get_data().todense())
+
+    pca = PCA()
+    pca.fit(train_data)
+
+    train_m = xgb.DMatrix(
+        pca.transform(train_data), dtrain.get_label())
+    test_m = xgb.DMatrix(
+        pca.transform(test_data), dtest.get_label())
+
+    return train_m, test_m, param
 
 
-def phmap_agg_loss(y_pred, train_data):
-    labels = train_data.get_label()
+def main() -> None:
+    """Run TPE to get best set of hyperparameters for XGB model."""
+    models_objectives = {
+        'estimator': {'objective': 'reg:squarederror'},
+        'lower_bound': {'objective': 'reg:quantileerror',
+                        'quantile_alpha': 0.05},
+        'upper_bound': {'objective': 'reg:quantileerror',
+                        'quantile_alpha': 0.95},
+        'median': {'objective': 'reg:quantileerror',
+                   'quantile_alpha': 0.5}
+        }
 
-    return 'mean_phmap', phmap_loss(labels, y_pred), False
-
-
-models_objectives = {
-    'lower_bound': {'objective': 'quantile', 'alpha': 0.05},
-    'upper_bound': {'objective': 'quantile', 'alpha': 0.95},
-    'median': {'objective': 'quantile', 'alpha': 0.5},
-    'estimator': {'objective': 'regression'}
+    SEARCH_SPACE = {
+        'variance_threshold': hp.uniform('variance_threshold', 0.1, 1),
+        'num_boost_rounds': hp.uniformint('num_boost_rounds', 100, 10_000),
+        'eta': hp.loguniform('eta', -4.5, 0),
+        'max_depth': hp.uniformint('max_depth', 2, 30),
+        'min_child_weight': hp.uniformint('min_child_weight', 2, 50),
+        'subsample': hp.uniform('subsample', 0.01, 1),
+        'gamma': hp.uniform('gamma', 0, 100),
+        'alpha': hp.uniform('alpha', 0, 100),
+        'lambda': hp.uniform('lambda', 0, 100)
     }
+    max_rounds = 5
 
-SEARCH_SPACE = {
-    # Objectives and reproducibility
-    'task': 'train',
-    'boosting_type': 'gbdt',
-    'deterministic': True,
-    'num_threads': 6,
-    'seed': 7501,
-    'verbose': -1,
-    'force_col_wise': True,
-    'extra_trees': True,
-    # Processor
-    'variance_treshold': hp.uniform('variance_treshold', 0, 0.9),
-    # Learning parameters
-    'max_bin': hp.uniformint('max_bin', 10, 400),
-    'feature_fraction_bynode': hp.uniform('feature_fraction_bynode', 0.5, 1),
-    'max_depth': hp.uniformint('max_depth', 2, 15),
-    'min_sum_hessian_in_leaf': hp.uniform(
-        'min_sum_hessian_in_leaf', 1, 20),
-    'feature_fraction': hp.uniform('feature_fraction', 0, 1),
-    'bagging_freq': hp.uniformint('bagging_freq', 1, 100),
-    'bagging_fraction': hp.uniform('bagging_fraction', 0.5, 1),
-    'min_data_in_leaf': hp.uniformint('min_data_in_leaf', 2, 40),
-    'early_stopping_round': hp.uniform('early_stopping_round', 0.05, 0.3),
-    'n_estimators': hp.uniformint('n_estimators', 100, 10_000),
-    'learning_rate': hp.uniform('learning_rate', 0.001, 0.5),
-    'num_leaves': hp.uniformint('num_leaves', 10, 64),
-    'lambda_l1': hp.uniform('lambda_l1', 0, 100),
-    'lambda_l2': hp.uniform('lambda_l2', 0, 100),
-    'linear_lambda': hp.uniform('linear_lambda', 0, 100)
-}
+    for config in models_objectives:
 
-for config in models_objectives:
+        def objective(search_space: dict) -> float:
+            """Evaluate parameter config and get loss.
 
-    print(f'Fitting {config}')
-    if config in ('estimator', 'median'):
-        max_rounds = 1_000
-    else:
-        max_rounds = 1_000
+            Parameters
+            ----------
+            search_space : dict
+                Current hyperparameter configuration
 
-    def objective(search_space):
-        X = pd.read_csv('data/phmap_dataset.csv')
-        y = pd.read_csv('data/ruls.csv')
+            Returns
+            -------
+            float
+                Loss value for XGBoost model with the current hyperparameters
+            """
+            X = pd.read_csv('data/phmap_dataset.csv').drop(
+                labels=['unit_names', 'hs'],
+                axis=1)
+            y = pd.read_csv('data/ruls.csv')
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X.drop(['unit_names', 'hs'], axis=1),
-            y,
-            test_size=0.25,
-            random_state=7501)
+            var_tresh = VarianceThreshold(
+                threshold=search_space['variance_threshold']
+                )
+            X = var_tresh.fit_transform(X)
+            d_train = xgb.DMatrix(X, y)
 
-        pca = PCA()
-        pca.fit(X_train)
-        with open(MODEL_PATH / 'pca_scaler.pkl', 'wb') as f:
-            pickle.dump(pca, f)
-
-        params = {
-            # Do not change
-            'task': 'train',
-            'boosting_type': 'gbdt',
-            'deterministic': True,
-            'num_threads': 6,
-            'seed': 7501,
-            'verbose': -1,
-            'force_col_wise': True,
-            # Learning parameters
-            'max_bin': int(search_space['max_bin']),
-            'feature_fraction_bynode': search_space['feature_fraction_bynode'],
-            'max_depth': int(search_space['max_depth']),
-            'min_sum_hessian_in_leaf': search_space['min_sum_hessian_in_leaf'],
-            'extra_trees': search_space['extra_trees'],
-            'feature_fraction': search_space['feature_fraction'],
-            'bagging_freq': int(search_space['bagging_freq']),
-            'bagging_fraction': search_space['bagging_fraction'],
-            'min_data_in_leaf': int(search_space['min_data_in_leaf']),
-            'early_stopping_round': int(
-                search_space['n_estimators'] *
-                search_space['early_stopping_round']),
-            'learning_rate': search_space['learning_rate'],
-            'num_leaves': int(search_space['num_leaves']),
-            'lambda_l1': search_space['lambda_l1'],
-            'lambda_l2': search_space['lambda_l2'],
-            'linear_lambda': search_space['linear_lambda']
+            params = {
+                'booster': 'gbtree',
+                'device': 'gpu',
+                'tree_method': 'hist',
+                # Learning Parameters,
+                'eta': search_space['eta'],
+                # Tree Hyperparameters
+                'max_depth': int(search_space['max_depth']),
+                'min_child_weight': int(search_space['min_child_weight']),
+                # Stochastic Sampling
+                'subsample': search_space['subsample'],
+                # Regularization
+                'gamma': search_space['gamma'],
+                'alpha': search_space['alpha'],
+                'lambda': search_space['lambda']
             }
-        params.update(models_objectives[config])
+            params.update(models_objectives[config])
 
-        # Have to re-create dataset inside the train loop
-        # lgbm_max bin works on the dataset keeping it from
-        # being reused for each iteration
-        d_train = lgb.Dataset(data=pca.transform(X_train),
-                              label=y_train,
-                              params={'verbose': -1})
-        d_test = lgb.Dataset(data=pca.transform(X_test),
-                             label=y_test,
-                             params={'verbose': -1})
+            if params['objective'] != 'reg:squarederror':
+                loss_name = 'test-quantile-mean'
+                custom_metric = None
 
-        if params['objective'] != 'regression':
+            else:
+                loss_name = 'test-PHMAP-mean'
+                custom_metric = PHMAP
 
-            start = timer()
-            model = lgb.train(params=params,
-                              train_set=d_train,
-                              valid_sets=[d_train, d_test],
-                              num_boost_round=int(search_space['n_estimators'])
-                              )
-            end = timer()
-            loss = model.best_score['valid_1']['quantile']
+            try:
+                results = xgb.cv(
+                    params=params,
+                    dtrain=d_train,
+                    nfold=5,
+                    custom_metric=custom_metric,
+                    seed=7501,
+                    num_boost_round=int(search_space['num_boost_rounds']),
+                    maximize=False,
+                    shuffle=True,
+                    early_stopping_rounds=50,
+                    fpreproc=preprocess
+                )
+                loss = results[loss_name].tail(1).item()
 
-        else:
-            start = timer()
-            model = lgb.train(params=params,
-                              train_set=d_train,
-                              valid_sets=[d_train, d_test],
-                              feval=phmap_agg_loss,
-                              num_boost_round=int(search_space['n_estimators'])
-                              )
-            end = timer()
-            loss = model.best_score['valid_1']['mean_phmap']
+            # I know it's bad practice, but this exception is meant
+            # to catch XGBoost GPU errors that occur somewhat randomly
+            except Exception:
+                loss = 9999
 
-        # Training time in seconds
-        train_time = end - start
+            return {'loss': loss, 'status': STATUS_OK}
 
-        return {'loss': loss, 'status': STATUS_OK, 'train_time': train_time}
+        MODEL_NAME = BASE_MODEL_PATH / f'{start_time}_{config}'
 
-    trials = Trials()
-    best_hyperparams = fmin(fn=objective,
-                            space=SEARCH_SPACE,
-                            algo=tpe.suggest,
-                            max_evals=max_rounds,
-                            trials=trials,
-                            verbose=True)
+        trials = Trials()
+        best_parameters = fmin(fn=objective,
+                               space=SEARCH_SPACE,
+                               algo=tpe.suggest,
+                               trials=trials,
+                               max_evals=max_rounds,
+                               rstate=np.random.default_rng(seed=7501))
 
-    time_tag = datetime.now().strftime("%Y%m%d-%H%M%S")
+        print(f'Finished optimizing {config}, saving the best parameters...')
+        with open(f'{MODEL_NAME}_parms.pkl', 'wb') as f:
+            pickle.dump(space_eval(SEARCH_SPACE, best_parameters), f)
 
-    with open(MODEL_PATH / f'{time_tag}_{config}_parms.pkl', 'wb') as f:
-        best_parameters = space_eval(SEARCH_SPACE, best_hyperparams)
-        best_parameters.update(models_objectives[config])
-        best_parameters['early_stopping_round'] = int(
-            best_parameters['early_stopping_round'] *
-            best_parameters['n_estimators']
-        )
-        print(best_parameters)
-        pickle.dump(best_parameters, f)
+        print('Saving trials')
+        with open(f'{MODEL_NAME}_study.pkl', 'wb') as f:
+            pickle.dump(trials, f)
 
-    with open(MODEL_PATH / f'{time_tag}_{config}trials_result.pkl', 'wb') as f:
-        pickle.dump(trials, f)
+
+if __name__ == '__main__':
+    main()
