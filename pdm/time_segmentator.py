@@ -1,9 +1,17 @@
+"""MTS segmentator wrapper.
+
+Applies an offline time series segmentation technique
+on multivariate data, extracts a set of statistical properties
+from the array.
+"""
 import numpy as np
 import ruptures as rpt
 import matplotlib.pyplot as plt
+from typing import List
 
 
 class TimeSegmentProcessor():
+    """MTS processor to get stats of relevant segments in series."""
 
     def __init__(self,
                  search_method: rpt.base.BaseEstimator,
@@ -12,7 +20,7 @@ class TimeSegmentProcessor():
                  jump: int,
                  n_bks: int,
                  stat_funcs: list):
-        """Multivariate time series changepoint detection wrapper
+        """Multivariate time series changepoint detection wrapper.
 
         Parameters
         ----------
@@ -30,7 +38,6 @@ class TimeSegmentProcessor():
             List of statistical functions to apply to extract features
             Must accept an axis parameter for multivariate time series
         """
-
         self.search_method = search_method
         self.model = model
         self.min_size = min_size
@@ -39,7 +46,7 @@ class TimeSegmentProcessor():
         self.stat_funcs = stat_funcs
 
     def calculate_change_points(self, array: np.ndarray):
-        """Detect changepoints in a given ndarray
+        """Detect changepoints in a given ndarray.
 
         Parameters
         ----------
@@ -65,8 +72,8 @@ class TimeSegmentProcessor():
                 f"Algo couldn't find {self.n_bks} changepoints in the array"
                 )
 
-    def split_array(self, array: np.ndarray) -> list[np.ndarray]:
-        """Helper function to get a list of the splitted arrays
+    def split_array(self, array: np.ndarray) -> List[np.ndarray]:
+        """Get a list of the splitted arrays.
 
         Parameters
         ----------
@@ -78,7 +85,6 @@ class TimeSegmentProcessor():
         list[np.ndarray]
             List of numpy arrays (of varying length)
         """
-
         if len(array.shape) == 1:
 
             sub_arrays = []
@@ -100,7 +106,7 @@ class TimeSegmentProcessor():
         return sub_arrays
 
     def segment_stats(self, segment: np.ndarray) -> np.ndarray:
-        """Helper function to calculate statistical properties of a segment
+        """Calculate statistical properties of a segment.
 
         Parameters
         ----------
@@ -118,8 +124,7 @@ class TimeSegmentProcessor():
         return np.vstack(stats).T.flatten()
 
     def process_segments(self, array: np.ndarray) -> np.ndarray:
-        """Wrapper function to calculate change-points and provide
-        the final stats of the arrays
+        """Calculate change-points and provide the final stats of the arrays.
 
         Parameters
         ----------
@@ -131,7 +136,6 @@ class TimeSegmentProcessor():
         np.ndarray
             Array of stats of each segment found in the base array
         """
-
         self.calculate_change_points(array)
         sub_arrs = self.split_array(array)
         res = []
@@ -142,13 +146,12 @@ class TimeSegmentProcessor():
         return np.concatenate(res, axis=0)
 
     def plot_segments(self, array: np.ndarray):
-        """Helper function to plot the segment results
+        """Plot the segment results.
 
         Parameters
         ----------
         array : np.ndarray
             Array to be plotted
         """
-
         rpt.show.display(array, self.bks_idx)
         plt.show()
