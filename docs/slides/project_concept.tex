@@ -16,7 +16,7 @@
 \DeclareMathOperator*{\argmin}{arg\,min}
 \graphicspath{{img/}}
 
-\title{Research Stay: Predictive Maintenance of Industrial Equipment}
+\title{Optimizing Aircraft Engine RUL Prediction with Bayesian-Enhanced Interpretable ML and SHAP}
 \author{Juan Echeagaray}
 \institute{School of Engineering and Sciences \\ Instituto Tecnológico y de Estudios Superiores de Monterrey}
 \date{\today}
@@ -282,7 +282,7 @@
             \end{frame}
 
             \begin{frame}{Time Series Segmentation}{Basics}
-                For a given signal $Y = \{\boldsymbol{y}_t\}_{t=1}^{t=T}$ of $T$ samples, where $y_t \in \mathbb{R}^d$, we assume there exists a set $\mathcal{T} = \{t_{1}^{*}, t_{2}^{*}, \dots, t_{n}^{*}\}$ coding the $n-1$ stages of $Y$
+                For a given signal $Y = \{y_t\}_{t=1}^{t=T}$ of $T$ samples, where $y_t \in \mathbb{R}^d$, we assume there exists a set $\mathcal{T} = \{t_{1}^{*}, t_{2}^{*}, \dots, t_{n}^{*}\}$ coding the $n-1$ stages of $Y$
 
                 \begin{figure}[!htbp]
                     \centering
@@ -335,7 +335,7 @@
                     \end{tabular}
                 \end{table}
 
-                Applying each element of $F_s$ results on $S_i$ results in a feature vector $\hat{S}_i \in \mathbb{R}^{d \cdot |F_s|}$
+                Applying each element of $F_s$ onto $S_i$ results in a feature vector $\hat{S}_i \in \mathbb{R}^{d \cdot |F_s|}$
             \end{frame}
 
             \begin{frame}{Data Reduction}
@@ -381,7 +381,7 @@
                 \begin{enumerate}
                     \item Define a common loss function
                     \item Apply data transformation techniques \footnote{Any transformation must also be interpretable}
-                    \item Select a suite of \textbf{interpretable} ML models
+                    \item Select a suite of \textbf{easy to train} ML models
                     \item Baseline testing (w/o tuning) and ranking
                     \item Candidate model selection
                     \item Repeat!
@@ -435,40 +435,6 @@
             \end{itemize}
         \end{frame}
 
-        % \begin{frame}{Model Interpretation}{Analyzing Principal Components}
-        %     \begin{algorithm}[H]
-        %         \begin{algorithmic}[1]
-        %             \STATE $x_s \leftarrow X[s]$ \COMMENT{Sample from raw dataset}
-        %             \STATE $E_f \leftarrow P[f]$ \COMMENT{Subset of explanatory features}
-        %             \STATE $\epsilon \leftarrow 0.1$ \COMMENT{Error treshold}
-        %             \STATE $F_w \leftarrow E$ \COMMENT{PCA component's matrix}
-        %             \FOR{$f$ in $E_f$}
-        %                 \STATE $x_p \leftarrow X_p[s, f]$
-        %                 \STATE $w_{idx} \leftarrow argsort(abs(F_w[:, f]))$
-        %                 \STATE $approx \leftarrow cumsum(x_s[w_{idx}] * F_w[w_{idx}, f])$
-        %                 \STATE $f_i \leftarrow argmax (abs(approx / x_p)) \geq 1 - \epsilon $
-        %                 \STATE $\Hat{x}_p \leftarrow x_s[w_{idx}][:f_i] \cdot F_w[w_{idx}, f][:f_i]$
-        %                 \PRINT $x_s[f_i], x_p, \Hat{x}_p, F_w[f_i]$
-        %             \ENDFOR
-        %         \end{algorithmic}
-        %         \caption{Pseudocode for the calculation of truncated explanations}
-        %         \label{alg:seq}
-        %     \end{algorithm}
-        % \end{frame}
-
-        % \begin{frame}{Model Interpretation}{An example of truncated explanations}
-        %     Given a dataset $X \in \mathcal{M}_{100}^{5}(\mathbb{R})$, a target feature $y \in \mathbb{R}$. PCA is applied on $X$ to get $X_{proj}$ and $W$, a model $\hat{f}$ is trained on $X_{proj}$ to predict $y$. We're interested on sample $x_s$ and know $PC0, PC3$ contributed the most to its corresponding estimate. Checking $PC0$:
-        %     \begin{gather*}
-        %         x_s = [0.843, 0.069, 0.894, 0.089, 0.163] \\
-        %         X_{std} = [0.975, 0.012, 0.869, -0.022, 0.291] \\
-        %         w =  [0.450, -0.343,  0.510,  0.638, -0.100] \\
-        %         x_{proj} = 0.835 \\
-        %         w_{idx} = [3, 2, 0, 1, 4] \\
-        %         approxs = [-0.0146,  0.4292,  0.8689,  0.8644,  0.8351] \\
-        %         selected = [3, 2, 0]
-        %     \end{gather*}
-        % \end{frame}
-
         \subsection{Prediction Intervals}
 
             \begin{frame}{Prediction Intervals}{Estimating uncertainty}
@@ -509,7 +475,7 @@
             \begin{frame}{Hyperparameter Optimization}{Overview}
                 \begin{columns}
                     \begin{column}{0.5\textwidth}
-                        Each dataset and model is different, and there is no rigorous proof on how to determine the optimal hyperparameters for a given problem. We adopt approximated methods divided into 3 categories \cite{aws-hyperparameter}:
+                        Each dataset and model is different, and there is no rigorous proof on how to determine the optimal hyperparameters for a given problem. We adopt approximate methods divided into 3 categories \cite{aws-hyperparameter}:
                         \begin{itemize}
                             \item Grid Search
                             \item Random Search
@@ -538,7 +504,10 @@
                 \begin{exampleblock}{Heuristic}
                     Select the hyperparameter which maximices:
                     \begin{equation}
-                        x_s = \argmax_{x} \frac{g(x)}{b(x)}
+                        \begin{gathered}
+                            S_g = \left\{X: X \sim g(x)\right\} \\
+                            x_s = \argmax_{x \in S_g} \frac{g(x)}{b(x)}
+                        \end{gathered}
                     \end{equation}
                 \end{exampleblock}
             \end{frame}
@@ -547,7 +516,7 @@
                 \begin{figure}[placement]
                     \centering
                     \includegraphics[scale=0.8]{bayesian_algo_overview.png}
-                    \caption{Example of TPE trial suggestion \cite{pmlr-v139-tiao21a}}
+                    \caption{Example of TPE trial history \cite{pmlr-v139-tiao21a}}
                 \end{figure}
             \end{frame}
 
@@ -573,32 +542,32 @@
 
         \begin{frame}{Baseline Regression Models}
 
-            A suite of interpretable ML models is fit to 80\% of the resulting dataset, tested on the remaining 20\%
+            A suite of ML models is fit to 80\% of the resulting dataset, tested on the remaining 20\%
             \begin{table}[!htbp]
                 \scalebox{0.6}{
-                \begin{tabular}{llllllll}
-                \hline
-                Model & Train Loss & Test Loss & Train R2 & Test R2 & Train RMSE & Test RMSE & Fit Time \\
-                \hline
-                Catboost & 4.925814 & 6.81856 & 0.888255 & 0.793759 & 7.918826 & 11.036592 & 30.923586 \\
-                XGBoost & 3.992694 & 6.902025 & 0.928544 & 0.78922 & 6.332358 & 11.157376 & 6.510977 \\
-                \textbf{LGBM} & \textbf{4.861673} & \textbf{6.983948} & \textbf{0.891184} & \textbf{0.784365}  & \textbf{7.81434} & \textbf{11.285139} & \textbf{2.113664}  \\
-                Random Forest & 2.824662 & 7.209788 & 0.967582 & 0.77276 & 4.265207 & 11.584841 & 216.538052 \\
-                Ridge & 6.840865 & 7.275478 & 0.783071 & 0.766391 & 11.033299 & 11.746066 & 0.05542 \\
-                Lasso Lars & 7.30732 & 7.420427 & 0.753777 & 0.75725 & 11.754672 & 11.973661 & 0.064927 \\
-                Lasso & 7.307333 & 7.420434 & 0.753776 & 0.75725 & 11.754695 & 11.973673 & 0.122003 \\
-                Elastic Net & 7.363291 & 7.47165 & 0.750416 & 0.754214 & 11.834634 & 12.048292 & 0.237217 \\
-                SVM & 7.36937 & 7.60994 & 0.748435 & 0.744574 & 11.881503 & 12.282309 & 13.777651 \\
-                Decision Tree & 0.5 & 9.758508 & 1.0 & 0.625179 & 0.0 & 14.878505 & 3.323056 \\
-                Dummy (Mean) & 17.27968 & 17.824815 & 0.0 & -0.004084 & 23.688969 & 24.351877 & 0.002806 \\
-                Linear Regression & 5.642092 & 87743.731314 & 0.852029 & 0.635906 & 9.112421 & 14.664064 & 0.257621 \\
-                \hline
-                \end{tabular}
+                    \begin{tabular}{llllll}
+                        \hline
+                        Model & Train Loss & Test Loss & Train RMSE (cycles) & Test RMSE (cycles) & Training Time (s) \\
+                        \hline
+                        Catboost & 2.043735 & 5.321611 & 3.769342 & 9.399465 & 25.692841 \\
+                        LightGBM & 2.636837 & 5.366961 & 4.823249 & 9.478604 & 2.475869 \\
+                        XGBoost & 0.69788 & 5.726742 & 1.304671 & 10.0481 & 6.989698 \\
+                        Random Forest & 2.086446 & 5.898664 & 3.837787 & 10.338893 & 223.095046 \\
+                        Ridge & 6.340865 & 6.775478 & 11.033299 & 11.746066 & 0.043501 \\
+                        Elastic Net & 6.888502 & 7.023012 & 11.872991 & 12.126897 & 0.029605 \\
+                        Lasso & 6.933741 & 7.053696 & 11.937772 & 12.170086 & 0.028591 \\
+                        Lasso Lars & 6.933741 & 7.053696 & 11.937772 & 12.170086 & 0.043695 \\
+                        SVM & 6.878442 & 7.168354 & 11.893748 & 12.372685 & 12.91969 \\
+                        Decision Tree & 0.0 & 9.472139 & 0.0 & 14.871512 & 3.39316 \\
+                        Dummy (mean) & 16.77968 & 17.324815 & 23.688969 & 24.351877 & 0.000823 \\
+                        Linear Regression & 5.142092 & 87743.231556 & 9.112421 & 14.664064 & 0.246407 \\
+                        \hline
+                    \end{tabular}
                 }
             \end{table}
 
             \begin{enumerate}
-                \item LGBM achieves similar accuracy as Catboost and XGBoost but in a fraction of their training time
+                \item Gradient Boosting family achieves overall the same performance
                 \item Linear models present less overfitting but comparatively lower accuracy
             \end{enumerate}
         \end{frame}
@@ -616,74 +585,32 @@
 
         \begin{frame}{Effects on Model Accuracy subject to prior Standarization}
 
-            Using a LGBM regressor as a baseline model, the following treatments were tested on a validation dataset:
+            Using a XGBoost regressor as a baseline model, the following treatments were tested on a validation dataset:
             \begin{table}[!htbp]
                 \begin{tabular}{ll}
                     \hline
                     Transformation & Test Loss \\
                     \hline
-                    No PCA & 6.983 \\
-                    Raw, all PCs & 5.867 \\
-                    Raw, 28 PCs & 7.229 \\
-                    Standardized, all PCs & 6.786 \\
-                    Standardized, 93 PCs & 7.506 \\
+                    Raw &  6.402025 \\
+                    PCA &  5.726742 \\
+                    PCA(0.99) &  6.963744 \\
+                    Standardized PCA &  6.746479 \\
+                    Standardized PCA(0.99) &  7.448121 \\
                     \hline
                 \end{tabular}
+                \caption{Comparison of PCA and Standardization Treatments}
             \end{table}
 
             PCA enables an overall improvement on model loss, but the model doesn't rely on the \textit{most} important components.
         \end{frame}
 
-        \begin{frame}{Sample Predictions}
-            Using a basic LGBM model with 100 epochs yields:
-            \begin{figure}
-                \centering
-                \includegraphics[scale=0.35]{lgbm_preds_DS01-005_7.png}
-                \caption{RUL estimates and deviations from real RUL for plane 7 of dataset DS01-005}
-            \end{figure}
-        \end{frame}
-
-        \begin{frame}{Sample Predictions}
-            \begin{figure}
-                \centering
-                \includegraphics[scale=0.35]{lgbm_preds_DS02-006_15.png}
-                \caption{RUL estimates and deviations from real RUL for plane 15 of dataset DS02-006}
-            \end{figure}
-        \end{frame}
-
-        \begin{frame}{Model interpretation}
-
-            Next we show the overall importance of each Principal Component in RUL regression:
-            \begin{figure}
-                \centering
-                \includegraphics[scale=0.35]{global_shap_importance.png}
-                \caption{SHAP values for the Top 7 features (selected by the mean absolute value across all predictions)}
-            \end{figure}
-
-            The first 3 Principal Components appear in the Top 7, but are not the most important
-        \end{frame}
-
-        \begin{frame}{Instance Explanation}
-
-            We can also analyze in detail a single RUL estimate:
-            \begin{figure}
-                \centering
-                \includegraphics[scale=0.35]{flight_sample_explanations.png}
-                \caption{SHAP values for the Top 7 features (selected by the mean absolute value across all predictions)}
-            \end{figure}
-        \end{frame}
-
-        \begin{frame}{Example of estimated prediction intervals}
-            Fitting a base LGBM for RUL estimates and 2 models for quantile regression using pinball loss:
-            \begin{figure}
-                \centering
-                \includegraphics[scale=0.5]{test_intervals.png}
-                \caption{RUL estimates and a 90\% prediction interval for a plane}
-            \end{figure}
-        \end{frame}
-
         \begin{frame}{TPE Hyperparameter Optimization}
-            Defined a common search space with hyperparameters available for XGBoost Regressors. The optimization regime constrained is to 1500 iterations per model, for the following search space:
+
+            \begin{itemize}
+                \item Optimizes the following models: RUL estimator, Lower and Upper bounds for  prediction intervals
+                \item 500 trials per model
+                \item Minimizes the 5-fold cross-validated test PHMAP loss
+            \end{itemize}
 
             \begin{table}[!htbp]
                 \centering
@@ -692,26 +619,117 @@
                     \hline
                     Parameter & Range \\
                     \hline
-                    Learning Rate & $\exp (\mathcal{U}(-10, 0))$ \\
-                    Boosting Rounds & $\mathcal{U}(100, 10000)$ \\
-                    Max Depth & $\mathcal{U}(2, 25)$ \\
-                    Min Child Weight & $\mathcal{U}(2, 50)$ \\
-                    Subsample & $\mathcal{U}(0.2, 1)$ \\
-                    Subsample by Tree & $\mathcal{U}(0.2, 1)$ \\
-                    Subsample by Node & $\mathcal{U}(0.2, 1)$ \\
-                    Subsample by Level & $\mathcal{U}(0.2, 1)$ \\
-                    Gamma & $ \exp (\mathcal{U}(-10, 10))$ \\
-                    Alpha & $ \exp (\mathcal{U}(-10, 10))$ \\
-                    Lambda & $ \exp (\mathcal{U}(-10, 10))$ \\
+                    Variance Threshold & $U(0.1, 1)$ \\
+                    Learning Rate & $\exp (U(-4.5, 0))$ \\
+                    Boosting Rounds & $U_\mathbb{Z}(100, 10000)$ \\
+                    Max Depth & $U_\mathbb{Z}(2, 30)$ \\
+                    Min Child Weight & $U_\mathbb{Z}(2, 50)$ \\
+                    Subsample & $U(0.01, 1)$ \\
+                    Gamma & $ U(0, 100)$ \\
+                    Alpha & $ U(0, 100)$ \\
+                    Lambda & $ U(0, 100)$ \\
                     \hline
                 \end{tabular}}
+                \caption{Proposed hyperparameter search space}
             \end{table}
+        \end{frame}
 
-            \textbf{TPE optimizes the mean cross-validated PHMAP test loss across 5 folds}
+        \begin{frame}{TPE Results}
 
+            The total optimization procedure took \textit{around} 8 hours (considering all models).
+
+            \begin{table}[!htbp]
+                \centering
+                \scalebox{0.8}{
+                \begin{tabular}{lllll}
+                    \hline
+                    Parameter & Range & RUL & Lower Bound & Upper Bound\\
+                    \hline
+                    Variance Threshold & $U(0.1, 1)$ & 0.10208 & 0.1 & 0.9447 \\
+                    Learning Rate & $\exp (U(-4.5, 0))$ & 0.02114 & 0.1163 & 0.042279 \\
+                    Boosting Rounds & $U_\mathbb{Z}(100, 10000)$ & 1963 & 5859 & 3830 \\
+                    Max Depth & $U_\mathbb{Z}(2, 30)$ & 30 & 15 & 20\\
+                    Min Child Weight & $U_\mathbb{Z}(2, 50)$ & 29 & 41 & 38 \\
+                    Subsample & $U(0.01, 1)$ & 0.72610 & 0.85454 & 0.79559 \\
+                    Gamma & $ U(0, 100)$ & 62.667 & 0.12458 & 0.10927 \\
+                    Alpha & $ U(0, 100)$ & 8.7213 & 18.8598 & 11.3874 \\
+                    Lambda & $ U(0, 100)$ & 34.832 & 20.921385 & 82.70694\\
+                    \hline
+                    Loss & - & 5.6873 & 1.853 & 2.3995\\
+                    \hline
+                \end{tabular}}
+                \caption{TPE results after 500 trials}
+            \end{table}
+        \end{frame}
+
+        \begin{frame}{Residual Overview}
+            \begin{columns}
+                \begin{column}{0.45\textwidth}
+                    Looking deeper into the RUL estimator:
+                    \begin{itemize}
+                        \item Residuals centered at 0
+                        \item Relatively fat distribution (higher kurtosis than normal)
+                        \item ECDF at 0 is 53\%
+                    \end{itemize}
+                \end{column}
+                \begin{column}{0.55\textwidth}
+                    \begin{figure}
+                        \centering
+                        \includegraphics[scale=0.4]{optimized_xgb_residuals.png}
+                    \end{figure}
+                \end{column}
+            \end{columns}
+
+            Residuals with zero mean are expected for models minimizing MSE, but \textit{maybe} for this scenario a positive mean would be better (model which underestimates)
+        \end{frame}
+
+        \begin{frame}{Sample Predictions}
+            \begin{figure}[!htbp]
+                \centering
+                \includegraphics[scale=0.6]{preds_DS03-012_5.png}
+            \end{figure}
+        \end{frame}
+
+        \begin{frame}{Sample Predictions}
+            \begin{figure}[!htbp]
+                \centering
+                \includegraphics[scale=0.6]{preds_DS07_8.png}
+            \end{figure}
+        \end{frame}
+
+        \begin{frame}{Model interpretation}
+
+            Next we show the overall importance of each variable in RUL regression:
+            \begin{figure}
+                \centering
+                \includegraphics[scale=0.35]{shap_summary.png}
+                \caption{SHAP values for the Top 12 features (selected by the mean absolute value across all predictions)}
+            \end{figure}
+        \end{frame}
+
+        \begin{frame}{Instance Explanation}
+            We can also analyze in detail a single RUL estimate:
+            \begin{figure}
+                \centering
+                \includegraphics[scale=0.35]{shap_waterfall_example.png}
+                \caption{SHAP values for the Top 10 features}
+            \end{figure}
+        \end{frame}
+
+        \begin{frame}{Instance Explanation}
+            Shapley Values also allow to check for dependencies:
+            \begin{figure}
+                \centering
+                \includegraphics[scale=0.35]{shap_dependence_flight_number.png}
+                \caption{SHAP dependence plot for flight number (color coded by flight class)}
+            \end{figure}
         \end{frame}
 
     \section{Conclusions}
+
+        \begin{frame}{Conclusions}
+            
+        \end{frame}
 
     \section*{References}
         \begin{frame}[allowframebreaks]
