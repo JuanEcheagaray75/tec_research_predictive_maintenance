@@ -2,7 +2,9 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{luainputenc}
 \usepackage{lmodern}
-\usepackage[size=custom, width=120,height=90, scale=1.15]{beamerposter}
+\usepackage[size=a0,
+            scale=1.1,
+            orientation=landscape]{beamerposter}
 \usetheme{gemini}
 \usecolortheme{uoft}
 \usepackage{graphicx}
@@ -30,7 +32,8 @@
 \setlength{\bigcolwidth}{0.45\paperwidth}
 
 \newcommand{\separatorcolumn}{\begin{column}{\sepwidth}\end{column}}
-\title{Optimizing Aircraft Engine RUL Prediction with Bayesian-Enhanced Interpretable ML and SHAP}
+% \title{Optimizing Aircraft Engine RUL Prediction with Bayesian-Enhanced Interpretable ML and SHAP}
+\title{Enhancing Aircraft Engine RUL Prediction: Interpretable Models and Bayesian Optimization}
 \author{Juan Pablo Echeagaray González \\ \textit{School of Engineering and Sciences}}
 % ====================
 % Logo (optional)
@@ -60,11 +63,11 @@
 
     \begin{block}{Problem Statement}
 
-        The main goal is to estimate the remaining useful life (RUL) of a ﬂeet of turbofan engines under challenging conditions, characterized by high variability and multiple failure modes.
+        The main goal is to estimate the remaining useful life (RUL) of a ﬂeet of turbofan engines under challenging conditions, defined by high variability and multiple failure modes.
         \begin{itemize}
-            \item \textbf{Efficient Modelling:} need for lower cost models
-            \item \textbf{Model Interpretability:} understand predictions in critical scenarios
-            \item \textbf{Confidence and prediction intervals:} provide measures of uncertainty
+            \item \textbf{Efficient Modelling:} need for lower cost models.
+            \item \textbf{Model Interpretability:} understand predictions in critical scenarios.
+            \item \textbf{Confidence and prediction intervals:} provide measures of uncertainty.
         \end{itemize}
 
         \begin{figure}
@@ -74,19 +77,17 @@
         \end{figure}
 
         The effectiveness of the proposed model is measured with the PHMAP 2021 Data Challenge Loss function \cite{chao2021phm}:
-
         \begin{equation} \label{eqn:phmap_loss}
             \begin{gathered}
-                RMSE = \sqrt{\frac{1}{m}\sum_{i=1}^{m} (y_i - \hat{y}_i)^{2}} \\
-                NASA = \frac{1}{m}\sum_{i=1}^{m} \left[\exp (\alpha \cdot (y_i - \hat{y}_i)) - 1\right]\\
+                \text{RMSE}(y, \hat{y}) = \sqrt{\frac{1}{m}\sum_{i=1}^{m} (y_i - \hat{y}_i)^{2}} \\
+                \textit{NASA}(y, \hat{y}) = \frac{1}{m}\sum_{i=1}^{m} \left[\exp (\alpha \cdot (y_i - \hat{y}_i)) - 1\right]\\
                 \alpha = \begin{cases}
                     \frac{-1}{10} & \text{if } y_i - \hat{y}_i \leq 0 \\
                     \frac{1}{13} & \text{if } y_i - \hat{y}_i > 0
                 \end{cases}  \\
-                \mathcal{L}(y, \hat{y}) = \frac{1}{2} \left(RMSE + NASA\right) \\
+                \mathcal{L}(y, \hat{y}) = \frac{1}{2} \left(\text{RMSE}(y, \hat{y}) + \textit{NASA}(y, \hat{y})\right). \\
             \end{gathered}
         \end{equation}
-
     \end{block}
 
 \end{column}
@@ -114,7 +115,7 @@
 
         \begin{figure}
             \centering
-            \subfloat[\centering RUL estimates and prediction intervalss]{{\includegraphics[scale=1.7]{figures/preds_DS07_8.png}}}
+            \subfloat[\centering RUL estimates and prediction intervals]{{\includegraphics[scale=1.7]{figures/preds_DS03-012_5.png}}}
             \qquad
             \subfloat[\centering Distribution of Shapley Values per feature]{{\includegraphics[scale=1.3]{figures/shap_summary.png}}}
             \caption{Example of RUL estimates produced and the Shapley Values for the predictions of the dataset}
@@ -150,7 +151,7 @@
 
     \begin{block}{Conclusions}
 
-        The research has delivered a comprehensive toolbox for systematic model optimization, showcasing performance enhancements over basic models but with a slight trade-off compared to Deep Learning methods.
+        The research has delivered a comprehensive toolbox for precise model optimization, showcasing performance enhancements over basic models but with a slight trade-off compared to Deep Learning methods.
 
         Future directions involve integrating segmentation algorithms into hyperparameter optimization, modifying feature selection techniques, and further experimentation with hyperparameter optimization processes. These endeavors contribute to the evolving landscape of predictive maintenance methodologies, striving for continuous improvements in both effectiveness and efficiency.
 

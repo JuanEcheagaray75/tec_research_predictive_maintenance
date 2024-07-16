@@ -1,7 +1,7 @@
 \documentclass{beamer}
 \usetheme{Madrid}
 \usecolortheme{default}
-\setbeamertemplate{navigation symbols}{}
+% \setbeamertemplate{navigation symbols}{}
 \usepackage[style=ieee,backend=biber]{biblatex}
 \usepackage{graphicx}
 \usepackage[font=scriptsize,labelfont=bf]{caption}
@@ -18,8 +18,28 @@
 
 \title{Optimizing Aircraft Engine RUL Prediction with Bayesian-Enhanced Interpretable ML and SHAP}
 \author{Juan Echeagaray}
-\institute{School of Engineering and Sciences \\ Instituto Tecnológico y de Estudios Superiores de Monterrey}
+\institute{School of Engineering and Sciences \\ Tecnologico de Monterrey}
 \date{\today}
+
+\makeatletter
+\setbeamertemplate{footline}
+{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.15\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor%~~\beamer@ifempty{\insertshortinstitute}{}{(\insertshortinstitute)}
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.75\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.1\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}%\insertshortdate{}\hspace*{2em}
+    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\makeatother
+
 
 \begin{document}
     \frame{\titlepage}
@@ -31,15 +51,29 @@
 
     \section{Introduction}
 
-        \begin{frame}{Introduction}{Introduction}
+        {
+            \setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+            \begin{frame}
+                \frametitle{\insertsection}
+                \begin{figure}
+                    \centering
+                    \includegraphics[width=0.7\columnwidth]{intro_maintenance.jpg}
+                \end{figure}
+                \begin{center}
+                    \textit{Why predictive maintenance?}
+                \end{center}
+            \end{frame}
+        }
+
+        \begin{frame}{Introduction}{Predictive Maintenance}
             \begin{columns}
                 \begin{column}{0.5\textwidth}
-                    Maintenance scheduled by data analytics on historical data
+                    Maintenance scheduled by data analytics on historical data:
                     \begin{itemize}
-                        \item Enhance operational efficiency
-                        \item Sustainability and cost reduction
-                        \item Competitive advantage
-                        \item \textbf{Safety at the forefront}
+                        \item Enhance operational efficiency.
+                        \item Sustainability and cost reduction by up to 40\% \cite{brink-2021}.
+                        \item Competitive advantage.
+                        \item \textbf{Safety at the forefront.}
                     \end{itemize}
                 \end{column}
                 \begin{column}{0.5\textwidth}
@@ -57,16 +91,30 @@
 
             Predictive maintenance faces 2 main challenges:
             \begin{block}{Implementation}
-                Need a model to estimate the RUL of a set of machinery, in an efficient and reliable manner
+                Need a model to estimate the RUL of a set of machinery, in an efficient and reliable manner.
             \end{block}
 
             \begin{alertblock}{Interpretability}
-                Need to \textit{understand} why a model produces a given RUL estimate, becomes more important in critical environments
+                Need to \textit{understand} why a model produces a given RUL estimate, becomes more important in critical environments.
             \end{alertblock}
 
         \end{frame}
 
     \section{Objectives}
+
+        {
+            \setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+            \begin{frame}
+                \frametitle{\insertsection}
+                \begin{figure}
+                    \centering
+                    \includegraphics[width=0.7\columnwidth]{objectives_path.jpg}
+                \end{figure}
+                \begin{center}
+                    \textit{What are we going to do?}
+                \end{center}
+            \end{frame}
+        }
 
         \begin{frame}
             \frametitle{Objectives}
@@ -74,9 +122,9 @@
                 \begin{column}{0.45\textwidth}
                     This research project aims to develop:
                     \begin{enumerate}
-                        \item PdM framework to predict RUL for a designated fleet of machinery
-                        \item Model which ensures reproducibility, stability, robustness and confidence
-                        \item Tools to interpret and visualize the model's predictions
+                        \item PdM framework to predict RUL for a designated fleet of machinery.
+                        \item Model which ensures reproducibility, stability, robustness and confidence.
+                        \item Tools to interpret and visualize the model's predictions.
                     \end{enumerate}
                 \end{column}
                 \begin{column}{0.55\textwidth}
@@ -94,8 +142,8 @@
                 \begin{column}{0.5\textwidth}
                     The previous objectives are to be accomplished subject to the following constraints and assumptions:
                     \begin{itemize}
-                        \item RUL prediction of an uniform fleet of machines
-                        \item Availability of a labeled dataset with run to failure sequences of each machine
+                        \item RUL prediction of an uniform fleet of machines.
+                        \item Availability of a labeled dataset with run to failure sequences of each machine.
                     \end{itemize}
                 \end{column}
                 \begin{column}{0.5\textwidth}
@@ -125,6 +173,20 @@
 
     \section{Exploratory Data Analysis}
 
+        {
+            \setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+            \begin{frame}
+                \frametitle{\insertsection}
+                \begin{figure}
+                    \centering
+                    \includegraphics[width=0.7\columnwidth]{eda_puzzle.jpg}
+                \end{figure}
+                \begin{center}
+                    \textit{What kind of data do we have?}
+                \end{center}
+            \end{frame}
+        }
+
         \begin{frame}{Exploratory Data Analysis}{NCMAPSS Dataset}
 
             Flight conditions and readings from a fleet of turbofan engines,
@@ -148,7 +210,6 @@
                         \item Split into 10 h5 files
                         \item Sampling frequency of 1 second
                         \item Contains sensor readings, environmental descriptors, auxiliary variables, virtual sensor readings and RUL values
-                        \item Corrupted file in the dataset
                     \end{itemize}
                 \end{column}
                 \begin{column}{0.6\textwidth}
@@ -195,15 +256,15 @@
 
         \end{frame}
 
-        \begin{frame}{Exploratory Data Analysis}{Flight Class Distribution}
-            \begin{figure}[!htbp]
-                \centering
-                \includegraphics[scale=0.4]{fligt_class_per_unit_DS07.h5.png}
-                \caption{Flights recorded for each class per unit}
-            \end{figure}
-            Flight classes encode flight duration\footnotemark[1], and there are no inter-class units
-            \footnotetext[1]{FC1 ranges between 1 and 3 hours, FC2 between 3 and 5, and FC3 is greater than 5}
-        \end{frame}
+        % \begin{frame}{Exploratory Data Analysis}{Flight Class Distribution}
+        %     \begin{figure}[!htbp]
+        %         \centering
+        %         \includegraphics[scale=0.4]{fligt_class_per_unit_DS07.h5.png}
+        %         \caption{Flights recorded for each class per unit}
+        %     \end{figure}
+        %     Flight classes encode flight duration\footnotemark[1], and there are no inter-class units
+        %     \footnotetext[1]{FC1 ranges between 1 and 3 hours, FC2 between 3 and 5, and FC3 is greater than 5}
+        % \end{frame}
 
         \begin{frame}{Exploratory Data Analysis}{Sample Operating Conditions}
             \begin{figure}[!htbp]
@@ -234,6 +295,20 @@
 
     \section{Methodology}
 
+        {
+            \setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+            \begin{frame}
+                \frametitle{\insertsection}
+                \begin{figure}
+                    \centering
+                    \includegraphics[width=0.7\columnwidth]{methodology_blueprint.jpg}
+                \end{figure}
+                \begin{center}
+                    \textit{How are we going to do it?}
+                \end{center}
+            \end{frame}
+        }
+
         \begin{frame}{Methodology}{Proposed Methodology}
             \begin{figure}[!htbp]
                 \centering
@@ -242,9 +317,9 @@
             \end{figure}
         \end{frame}
 
-        \subsection{Data Resampling and Downcasting}
+        \subsection{Initial Preprocessing}
 
-            \begin{frame}{Data Resampling and Downcasting}
+            \begin{frame}{Initial Preprocessing}{Data Resampling and Downcasting}
                 \begin{columns}
                     \begin{column}{0.45\textwidth}
                         Sensor readings every second can lead to large arrays, think about sampling frequency (1 Hz, 1 KHz, 1 MHz, etc\dots) and data types.
@@ -263,17 +338,17 @@
                 \end{columns}
             \end{frame}
 
-        \subsection{Time Series Segmentation}
+        \subsection{Feature Extraction}
 
-            \begin{frame}{Time Series Segmentation}
+            \begin{frame}{Feature Extraction}{Time Series Segmentation (TSS)}
 
                 \begin{alertblock}{Problem}
                     Dataset consists of a set of multivariate time series of varying length with a distinct number of events per series
                 \end{alertblock}
                 \begin{figure}[!htbp]
                     \centering
-                    \includegraphics[scale=0.3]{operating_conditions_unit_1_cycle_1.png}
-                    \caption{Operating conditions of Plane 1 during its first flight}
+                    \includegraphics[scale=0.3]{operating_conditions_unit_1_cycle_67.png}
+                    \caption{Operating conditions of Plane 1 during its 67th flight}
                 \end{figure}
 
                 \note[item]{Altitude almost always seems to have 3 states, ascent, plateau, descent}
@@ -281,19 +356,20 @@
                 \note[item]{Take advantage of the syncrhonization between time series, look at plateau}
             \end{frame}
 
-            \begin{frame}{Time Series Segmentation}{Basics}
+            \begin{frame}{Feature Extraction}{TSS Basics}
                 For a given signal $Y = \{y_t\}_{t=1}^{t=T}$ of $T$ samples, where $y_t \in \mathbb{R}^d$, we assume there exists a set $\mathcal{T} = \{t_{1}^{*}, t_{2}^{*}, \dots, t_{n}^{*}\}$ coding the $n-1$ stages of $Y$
 
                 \begin{figure}[!htbp]
                     \centering
-                    \includegraphics[scale=0.35]{show_series.png}
+                    \includegraphics[scale=0.35]{sample_breakpoints.png}
                     \caption{Piecewise constant signal with normal noise}
                     \footnote{The last index eases the software implementation}
                 \end{figure}
             \end{frame}
 
-            \begin{frame}{Search Algorithms}{Binary Segmentation}
-                Greedy sequential algorithm that estimates 1st change-point as:
+            \begin{frame}{Feature Extraction}{Search Algorithms}
+
+                \textbf{Binary Segmentation} as a greedy sequential algorithm that estimates 1st change-point as:
                 \begin{equation}
                     \hat{t}_{1} := \argmin_{1 \leq t < T - 1} C(y_{0 \dots t}) + C(y_{t \dots T})
                 \end{equation}
@@ -307,8 +383,9 @@
                 \end{figure}
             \end{frame}
 
-            \begin{frame}{Cost Functions}{L2 Norm}
-                An estimator of shifts in the central point of a distribution. Given a series $\{y_t\}_{t \in \mathcal{I}}$ where  $y_t \in \mathbb{R}^d$:
+            \begin{frame}{Feature Extraction}{Cost Function}
+
+                Take the \textbf{L2 norm} An estimator of shifts in the central point of a distribution. Given a series $\{y_t\}_{t \in \mathcal{I}}$ where  $y_t \in \mathbb{R}^d$:
                 \begin{equation}
                     C(y_{\mathcal{I}}) = \sum_{d} \sum_{t \in \mathcal{I}} ||y_t - \bar{y} ||_{2}^{2}
                 \end{equation}
@@ -338,11 +415,11 @@
                 Applying each element of $F_s$ onto $S_i$ results in a feature vector $\hat{S}_i \in \mathbb{R}^{d \cdot |F_s|}$
             \end{frame}
 
-            \begin{frame}{Data Reduction}
+            \begin{frame}{Feature Extraction}{Data Reduction}
 
                 A flight $F_i \in \mathcal{M}_{d}^{T_i}(\mathbb{R})$ contains $d \cdot T_i$ elements, the feature vector $\hat{F}_i \in \mathbb{R}^{d |F_s| \tau}$ contains $ d |F_s| \tau$ elements, where $|F_s|$ is the number of statistical descriptors used and $\tau$ is the number of segments chosen.
 
-                As an example, use a flight with 5,000 timestamps, 10 features, 10 statistical descriptors and 4 segments:
+                As an example, consider a flight with 5,000 timestamps, 10 features, 10 statistical descriptors and 4 segments:
                 \begin{gather}
                     | F_i | = 10 \cdot 5,000 = 50,000 \\
                     | \hat{F}_i | = 10 \cdot 10 \cdot 4 = 400 \\
@@ -350,7 +427,7 @@
                 \end{gather}
             \end{frame}
 
-            \begin{frame}{Methodology}{Pros \& Cons}
+            \begin{frame}{Feature Extraction}{Pros \& Cons}
                 \begin{columns}
                     \begin{column}{0.45\textwidth}
                         \begin{exampleblock}{Pros}
@@ -374,13 +451,13 @@
                 \end{columns}
             \end{frame}
 
-        \subsection{RUL Prediction}
+        \subsection{Model Selection}
 
-            \begin{frame}{RUL Prediction}{Interpretable ML models}
+            \begin{frame}{Model Selection}{Interpretable ML models}
                 Given the reduced dataset, one now must select a model to estimate RUL. But how can you choose without prior information?
                 \begin{enumerate}
                     \item Define a common loss function
-                    \item Apply data transformation techniques \footnote{Any transformation must also be interpretable}
+                    \item Apply data transformation techniques
                     \item Select a suite of \textbf{easy to train} ML models
                     \item Baseline testing (w/o tuning) and ranking
                     \item Candidate model selection
@@ -472,7 +549,7 @@
 
         \subsection{Hyperparameter Optimization}
 
-            \begin{frame}{Hyperparameter Optimization}{Overview}
+            \begin{frame}{Hyperparameter Optimization (HPO)}{Overview}
                 \begin{columns}
                     \begin{column}{0.5\textwidth}
                         Each dataset and model is different, and there is no rigorous proof on how to determine the optimal hyperparameters for a given problem. We adopt approximate methods divided into 3 categories \cite{aws-hyperparameter}:
@@ -522,7 +599,22 @@
 
     \section{Experimental Results}
 
+        {
+            \setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+            \begin{frame}
+                \frametitle{\insertsection}
+                \begin{figure}
+                    \centering
+                    \includegraphics[width=0.7\columnwidth]{results.jpg}
+                \end{figure}
+                \begin{center}
+                    \textit{What insights emerge?}
+                \end{center}
+            \end{frame}
+        }
+
         \begin{frame}{Segmentation of Environmental Descriptors}
+
             For a test case we apply Binary Segmentation with L2 norm and min. size for segment of 20\% the length of the array
             \begin{figure}
                 \centering
@@ -542,25 +634,25 @@
 
         \begin{frame}{Baseline Regression Models}
 
-            A suite of ML models is fit to 80\% of the resulting dataset, tested on the remaining 20\%
+            A suite of ML models is fit to 80\% of a PCA processed dataset \footnote{See Table \ref{tab:raw_baseline} to compare model performances with raw data}, tested on the remaining 20\% (no GPU/TPU):
             \begin{table}[!htbp]
                 \scalebox{0.6}{
-                    \begin{tabular}{llllll}
+                    \begin{tabular}{lrrrrr}
                         \hline
                         Model & Train Loss & Test Loss & Train RMSE (cycles) & Test RMSE (cycles) & Training Time (s) \\
                         \hline
-                        Catboost & 2.043735 & 5.321611 & 3.769342 & 9.399465 & 25.692841 \\
-                        LightGBM & 2.636837 & 5.366961 & 4.823249 & 9.478604 & 2.475869 \\
-                        XGBoost & 0.69788 & 5.726742 & 1.304671 & 10.0481 & 6.989698 \\
-                        Random Forest & 2.086446 & 5.898664 & 3.837787 & 10.338893 & 223.095046 \\
-                        Ridge & 6.340865 & 6.775478 & 11.033299 & 11.746066 & 0.043501 \\
-                        Elastic Net & 6.888502 & 7.023012 & 11.872991 & 12.126897 & 0.029605 \\
-                        Lasso & 6.933741 & 7.053696 & 11.937772 & 12.170086 & 0.028591 \\
-                        Lasso Lars & 6.933741 & 7.053696 & 11.937772 & 12.170086 & 0.043695 \\
-                        SVM & 6.878442 & 7.168354 & 11.893748 & 12.372685 & 12.91969 \\
-                        Decision Tree & 0.0 & 9.472139 & 0.0 & 14.871512 & 3.39316 \\
-                        Dummy (mean) & 16.77968 & 17.324815 & 23.688969 & 24.351877 & 0.000823 \\
-                        Linear Regression & 5.142092 & 87743.231556 & 9.112421 & 14.664064 & 0.246407 \\
+                        Catboost & 2.043 & 5.321 & 3.769 & 9.399 & 25.692 \\
+                        LightGBM & 2.636 & 5.366 & 4.823 & 9.478 & 2.475 \\
+                        XGBoost & 0.697 & 5.726 & 1.304 & 10.048 & 6.989 \\
+                        Random Forest & 2.086 & 5.898 & 3.837 & 10.338 & 223.095 \\
+                        Ridge & 6.340 & 6.775 & 11.033 & 11.746 & 0.043 \\
+                        Elastic Net & 6.888 & 7.023 & 11.872 & 12.126 & 0.029 \\
+                        Lasso & 6.933 & 7.053 & 11.937 & 12.170 & 0.028 \\
+                        Lasso Lars & 6.933 & 7.053 & 11.937 & 12.170 & 0.043 \\
+                        SVM & 6.878 & 7.168 & 11.893 & 12.372 & 12.919 \\
+                        Decision Tree & 0.0 & 9.472 & 0.0 & 14.871 & 3.393 \\
+                        Dummy (mean) & 16.779 & 17.324 & 23.688 & 24.351 & 0.0008 \\
+                        Linear Regression & 5.142 & 87743.231 & 9.112 & 14.664 & 0.246 \\
                         \hline
                     \end{tabular}
                 }
@@ -570,38 +662,6 @@
                 \item Gradient Boosting family achieves overall the same performance
                 \item Linear models present less overfitting but comparatively lower accuracy
             \end{enumerate}
-        \end{frame}
-
-        \begin{frame}{Dimensionality Reduction?}
-            PCA on raw descriptors needs 28 components to explain 99\% of the total variance:
-            \begin{figure}
-                \centering
-                \includegraphics[scale=0.35]{pca_99_untransformed.png}
-                \caption{Explained variance ratio per Principal Component added up to 99\%}
-            \end{figure}
-
-            \textbf{Scaled PCA needs 93}, nonetheless weights should be distributed fairly, doesn't imply better prediction performance!
-        \end{frame}
-
-        \begin{frame}{Effects on Model Accuracy subject to prior Standarization}
-
-            Using a XGBoost regressor as a baseline model, the following treatments were tested on a validation dataset:
-            \begin{table}[!htbp]
-                \begin{tabular}{ll}
-                    \hline
-                    Transformation & Test Loss \\
-                    \hline
-                    Raw &  6.402025 \\
-                    PCA &  5.726742 \\
-                    PCA(0.99) &  6.963744 \\
-                    Standardized PCA &  6.746479 \\
-                    Standardized PCA(0.99) &  7.448121 \\
-                    \hline
-                \end{tabular}
-                \caption{Comparison of PCA and Standardization Treatments}
-            \end{table}
-
-            PCA enables an overall improvement on model loss, but the model doesn't rely on the \textit{most} important components.
         \end{frame}
 
         \begin{frame}{TPE Hyperparameter Optimization}
@@ -641,21 +701,21 @@
             \begin{table}[!htbp]
                 \centering
                 \scalebox{0.8}{
-                \begin{tabular}{lllll}
+                \begin{tabular}{llrrr}
                     \hline
                     Parameter & Range & RUL & Lower Bound & Upper Bound\\
                     \hline
-                    Variance Threshold & $U(0.1, 1)$ & 0.10208 & 0.1 & 0.9447 \\
-                    Learning Rate & $\exp (U(-4.5, 0))$ & 0.02114 & 0.1163 & 0.042279 \\
+                    Variance Threshold & $U(0.1, 1)$ & 0.102 & 0.1 & 0.944 \\
+                    Learning Rate & $\exp (U(-4.5, 0))$ & 0.021 & 0.116 & 0.042 \\
                     Boosting Rounds & $U_\mathbb{Z}(100, 10000)$ & 1963 & 5859 & 3830 \\
                     Max Depth & $U_\mathbb{Z}(2, 30)$ & 30 & 15 & 20\\
                     Min Child Weight & $U_\mathbb{Z}(2, 50)$ & 29 & 41 & 38 \\
-                    Subsample & $U(0.01, 1)$ & 0.72610 & 0.85454 & 0.79559 \\
-                    Gamma & $ U(0, 100)$ & 62.667 & 0.12458 & 0.10927 \\
-                    Alpha & $ U(0, 100)$ & 8.7213 & 18.8598 & 11.3874 \\
-                    Lambda & $ U(0, 100)$ & 34.832 & 20.921385 & 82.70694\\
+                    Subsample & $U(0.01, 1)$ & 0.726 & 0.854 & 0.795 \\
+                    Gamma & $ U(0, 100)$ & 62.667 & 0.124 & 0.109 \\
+                    Alpha & $ U(0, 100)$ & 8.721 & 18.859 & 11.387 \\
+                    Lambda & $ U(0, 100)$ & 34.832 & 20.921 & 82.706 \\
                     \hline
-                    Loss & - & 5.6873 & 1.853 & 2.3995\\
+                    Loss & - & 5.687 & 1.853 & 2.399\\
                     \hline
                 \end{tabular}}
                 \caption{TPE results after 500 trials}
@@ -690,13 +750,6 @@
             \end{figure}
         \end{frame}
 
-        \begin{frame}{Sample Predictions}
-            \begin{figure}[!htbp]
-                \centering
-                \includegraphics[scale=0.6]{preds_DS07_8.png}
-            \end{figure}
-        \end{frame}
-
         \begin{frame}{Model interpretation}
 
             Next we show the overall importance of each variable in RUL regression:
@@ -725,15 +778,138 @@
             \end{figure}
         \end{frame}
 
-    \section{Conclusions}
+    \section{Conclusions and Future Work}
 
-        \begin{frame}{Conclusions}
-            
+        {
+            \setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+            \begin{frame}
+                \frametitle{\insertsection}
+                \begin{figure}
+                    \centering
+                    \includegraphics[width=0.7\columnwidth]{conclusion.jpg}
+                \end{figure}
+                \begin{center}
+                    \textit{What have we achieved?}
+                \end{center}
+            \end{frame}
+        }
+
+        \begin{frame}{Conclusions and Future Work}{Comparison with previous work}
+
+            \textit{Slight decrease in performance but much less compute time for training and inference.}
+            \begin{table}
+                \centering
+                \begin{tabular}{ ccc }
+                    \hline
+                    User & Model & Score \\
+                    \hline
+                    IJoinedTooLate \cite{phm2021-1st-cnn} & Dilated CNN & 3.006 \\
+                    YellowJackets \cite{phm2021-2nd-inception} & Inception CNN & 3.327 \\
+                    DatrikUS \cite{phm2021-3rd-stacked-cnn} & Stacked DCNN & 3.651 \\
+                    \textbf{*} & \textbf{Bayesian Optimized XGBoost} & \textbf{5.687} \\
+                    \hline
+                \end{tabular}
+                \caption{Comparison of model performances}
+            \end{table}
         \end{frame}
 
+        \begin{frame}{Conclusions and Future Work}
+
+            The research has mainly accomplished:
+            \begin{itemize}
+                \item PdM framework with measures of \textbf{interpretability} and \textbf{uncertainty} built into it
+                \item Extendable toolbox to apply HPO for the suite of the proposed models
+            \end{itemize}
+
+            But there's still work to do:
+            \begin{itemize}
+                \item Incorporate time series segmentation into HPO
+                \item Use different feature selection techniques
+                \item Apply Deep Learning?
+            \end{itemize}
+        \end{frame}
+
+    \section*{Q\&A}
+
+        {
+            \setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+            \begin{frame}
+                \frametitle{\insertsection}
+                \begin{figure}
+                    \centering
+                    \includegraphics[width=0.7\columnwidth]{qa_question_mark.jpg}
+                \end{figure}
+                \begin{center}
+                    \textit{Questions?}
+                \end{center}
+            \end{frame}
+        }
+
     \section*{References}
+
         \begin{frame}[allowframebreaks]
             \frametitle{References}
             \printbibliography
         \end{frame}
+
+    \appendix
+    \begin{frame}{Raw Baseline Comparison}
+        \begin{table}[]
+            \scalebox{0.6}{
+            \begin{tabular}{lrrrrr}
+                \hline
+                Model & Train Loss & Test Loss & Train RMSE (cycles) & Test RMSE (cycles) & Training Time (s) \\
+                \hline
+                Catboost & 4.426 & 6.319 & 7.919 & 11.037 & 27.665 \\
+                XGBoost & 3.069 & 6.428 & 5.593 & 11.188 & 6.404 \\
+                LightGBM & 4.362 & 6.484 & 7.814 & 11.285 & 1.881 \\
+                Random Forest & 2.323 & 6.693 & 4.264 & 11.571 & 310.103 \\
+                Ridge & 6.341 & 6.775 & 11.033 & 11.746 & 0.086 \\
+                Lasso Lars & 6.807 & 6.92 & 11.755 & 11.974 & 0.085 \\
+                Lasso & 6.807 & 6.92 & 11.755 & 11.974 & 0.13 \\
+                Elastic Net & 6.863 & 6.972 & 11.835 & 12.048 & 0.27 \\
+                SVM & 6.869 & 7.11 & 11.882 & 12.282 & 12.76 \\
+                Decision Tree & 0.0 & 9.336 & 0.0 & 14.967 & 4.78 \\
+                Dummy (mean) & 16.78 & 17.325 & 23.689 & 24.352 & 0.001 \\
+                Linear Regression & 5.142 & 87743.232 & 9.112 & 14.664 & 0.407 \\
+                \hline
+            \end{tabular}
+            }
+            \caption{Comparison of model performance without PCA}
+            \label{tab:raw_baseline}
+        \end{table}
+    \end{frame}
+
+    \begin{frame}{Dimensionality Reduction?}
+        PCA on raw descriptors needs 28 components to explain 99\% of the total variance:
+        \begin{figure}
+            \centering
+            \includegraphics[scale=0.35]{pca_99_untransformed.png}
+            \caption{Explained variance ratio per Principal Component added up to 99\%}
+        \end{figure}
+
+        \textbf{Scaled PCA needs 93}, nonetheless weights should be distributed fairly, doesn't imply better prediction performance!
+    \end{frame}
+
+    \begin{frame}{Effects on Model Accuracy subject to prior Standarization}
+
+        Using a XGBoost regressor as a baseline model, the following treatments were tested on a validation dataset:
+        \begin{table}[!htbp]
+            \begin{tabular}{ll}
+                \hline
+                Transformation & Test Loss \\
+                \hline
+                No PCA &  6.402025 \\
+                PCA &  5.726742 \\
+                PCA(99\% Var.) &  6.963744 \\
+                Standardized PCA &  6.746479 \\
+                Standardized PCA(99\% Var.) &  7.448121 \\
+                \hline
+            \end{tabular}
+            \caption{Comparison of PCA and Standardization Treatments}
+        \end{table}
+
+        PCA enables an overall improvement on model loss, but the model doesn't rely on the \textit{most} important components.
+    \end{frame}
+
 \end{document}
